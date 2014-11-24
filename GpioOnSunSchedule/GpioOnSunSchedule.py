@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+"A class to keep GPIO pin level according to sunlight calculation."
+
 from astral import Astral
 import datetime
 from time import sleep
