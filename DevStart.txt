@@ -3,5 +3,5 @@ sudo pip3.4 install --upgrade pip3.4
 sudo pip3.4 install --upgrade virtualenv
 sudo pip3.4 install pytz
 sudo pip3.4 install astral
-sudo apt-get vim ack ctags git ruby rake
+sudo apt-get install vim ack ctags git ruby rake
 # install Janus plugin set for vim: https://github.com/carlhuda/janus
