@@ -37,13 +37,13 @@ class GpioOnSunSchedule:
         self.default_value = default_value
         self.interval = interval # seconds
         self.debug = debug
-    def run(self):
+    def __run(self):
         '''
         'run' forever and set given GPIO pin to suitable value according to whether sun is up or not.
         '''
         current_value = self.default_value
         if self.debug:
-            print("Setup GPIO pin {0} to OUT with initial value {1}.", self.gpio_pin, current_value)
+            print("Setup GPIO pin {0} to OUT with initial value {1}.".format(self.gpio_pin, current_value))
         GPIO.setup(self.gpio_pin, GPIO.OUT, initial=current_value)
         while True:
             # loop forever
@@ -51,32 +51,40 @@ class GpioOnSunSchedule:
             sunrise, sunset = sun['sunrise'], sun['sunset']
             now = datetime.datetime.now(tz=sunrise.tzinfo)
             if self.debug:
-                print("Today is {0}", sun)
-                print("Sunrise at {0}", sunrise)
-                print("Sunset at {0}", sunset)
-                print("Now is {0}", now)
+                print("Today is {0}".format(sun))
+                print("Sunrise at {0}".format(sunrise))
+                print("Sunset at {0}".format(sunset))
+                print("Now is {0}".format(now))
             if now > sunrise and now < sunset:
                 # sun is in the sky
                 if self.debug:
-                    print("Sun is in the sky! GPIO pin #{0} is {1}.", self.gpio_pin, current_value)
+                    print("Sun is in the sky! GPIO pin #{0} is {1}.".format(self.gpio_pin, current_value))
                 if current_value != self.value_during_sun:
                     current_value = self.value_during_sun
                     GPIO.output(self.gpio_pin, current_value)
                     if self.debug:
-                        print("Switch GPIO pin #{0} to {1}.", self.gpio_pin, current_value)
+                        print("Switch GPIO pin #{0} to {1}.".format(self.gpio_pin, current_value))
             else:
                 # sun is down
                 if self.debug:
-                    print("Sun is down! GPIO pin #{0} is {1}.", self.gpio_pin, current_value)
+                    print("Sun is down! GPIO pin #{0} is {1}.".format(self.gpio_pin, current_value))
                 if current_value == self.value_during_sun:
                     current_value = not self.value_during_sun
                     GPIO.output(self.gpio_pin, current_value)
                     if self.debug:
-                        print("Switch GPIO pin #{0} to {1}.", self.gpio_pin, current_value)
+                        print("Switch GPIO pin #{0} to {1}.".format(self.gpio_pin, current_value))
             if self.debug:
-                print("Sleep {0} seconds...", self.interval)
+                print("Sleep {0} seconds...".format(self.interval))
             sleep(self.interval)
+    def run(self):
+        try:
+            self.__run()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            print("Exiting... set GPIO pin #{0} to {1}.".format(self.gpio_pin, self.default_value))
+            GPIO.output(self.gpio_pin, self.default_value)
 
 if __name__ == '__main__':
-    kitchen_window_light = GpioOnSunSchedule('Stockholm', 10, value_during_sun=GPIO.LOW, default_value=GPIO.HIGH, interval=30, debug=True)
+    kitchen_window_light = GpioOnSunSchedule('Stockholm', 10, value_during_sun=GPIO.HIGH, default_value=GPIO.HIGH, interval=300, debug=True)
     kitchen_window_light.run()
