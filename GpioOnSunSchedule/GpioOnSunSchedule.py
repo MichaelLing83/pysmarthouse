@@ -1,17 +1,13 @@
 #!/usr/bin/env python3
 "A class to keep GPIO pin level according to sunlight calculation."
 
-from astral import Astral
 import datetime
 from time import sleep
 from sys import exit
-try:
-    import RPi.GPIO as GPIO
-except RuntimeError:
-    exit("Error importing RPi.GPIO! Try to run it as root!")
+import argparse
 
 class GpioOnSunSchedule:
-    def __init__(self, city, gpio_pin, value_during_sun=GPIO.LOW, default_value=GPIO.LOW, interval=60, debug=False):
+    def __init__(self, city, gpio_pin, value_during_sun=False, default_value=True, interval=60, debug=False):
         '''
         Initialize a GpioOnSunSchedule object, with
             @city(String):  name of your city
@@ -22,6 +18,11 @@ class GpioOnSunSchedule:
             @interval(Integer): time interval in seconds between two adjacent check.
             @debug(Boolean):    whether to print debug information
         '''
+        from astral import Astral
+        try:
+            import RPi.GPIO as GPIO
+        except RuntimeError:
+            exit("Error importing RPi.GPIO! Try to run it as root!")
         # Initialize Astral for sunrise/sunset time calculation
         self.astral = Astral()
         self.astral.solar_depression = 'civil'
@@ -86,5 +87,23 @@ class GpioOnSunSchedule:
             GPIO.output(self.gpio_pin, self.default_value)
 
 if __name__ == '__main__':
-    kitchen_window_light = GpioOnSunSchedule('Stockholm', 10, value_during_sun=GPIO.HIGH, default_value=GPIO.HIGH, interval=300, debug=True)
-    kitchen_window_light.run()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--debug", help="Enable debug output", action="store_true")
+    parser.add_argument("-c", "--city", help="Nearest capital city name", type=str, default="Stockholm")
+    parser.add_argument("-p", "--pin", help="GPIO pin number (BOARD mode) for output", type=int, required=True)
+    parser.add_argument("-s", "--sun_value", help="GPIO pin output during sun is up", type=bool, default=True)
+    parser.add_argument("-d", "--default_value", help="GPIO pin default output value", type=bool, default=True)
+    parser.add_argument("-i", "--interval", help="Sleep time before wake up again to change GPIO output", type=int, default=300)
+    args = parser.parse_args()
+    if args.debug:
+        print("city is {0}".format(args.city))
+        print("GPIO pin is #{0}".format(args.pin))
+        print("sun_value is {0}".format(args.sun_value))
+        print("default_value is {0}".format(args.default_value))
+    gpioOnSunSchedule = GpioOnSunSchedule(args.city,
+                                            args.pin,
+                                            value_during_sun=args.sun_value,
+                                            default_value=args.default_value,
+                                            interval=args.interval,
+                                            debug=args.debug)
+    gpioOnSunSchedule.run()

@@ -1,0 +1,10 @@
+sudo cp pysmarthouse_service /etc/init.d/pysmarthouse_service
+sudo chmod +x /etc/init.d/pysmarthouse_service
+# make it run at start up
+sudo update-rc.d /etc/init.d/pysmarthouse_service defaults
+
+# start service
+sudo /etc/init.d/pysmarthouse_service start
+
+# stop service
+sudo /etc/init.d/pysmarthouse_service stop
