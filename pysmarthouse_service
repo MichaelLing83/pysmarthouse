@@ -15,11 +15,11 @@
 case "$1" in 
     start)
         echo "Starting pysmarthouse_service"
-        /home/pi/git/pysmarthouse/pysmarthouse_service
+        /home/pi/git/pysmarthouse/pysmarthouse.sh
         ;;
     stop)
         echo "Stopping pysmarthouse_service"
-        killall python
+        killall python3
         ;;
     *)
         echo "Usage: /etc/init.d/pysmarthouse_service start|stop"

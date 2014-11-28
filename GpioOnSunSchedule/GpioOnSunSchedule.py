@@ -2,9 +2,16 @@
 "A class to keep GPIO pin level according to sunlight calculation."
 
 import datetime
+import signal
 from time import sleep
 from sys import exit
+import atexit
 import argparse
+from astral import Astral
+try:
+    import RPi.GPIO as GPIO
+except RuntimeError:
+    exit("Error importing RPi.GPIO! Try to run it as root!")
 
 class GpioOnSunSchedule:
     def __init__(self, city, gpio_pin, value_during_sun=False, default_value=True, interval=60, debug=False):
@@ -18,11 +25,6 @@ class GpioOnSunSchedule:
             @interval(Integer): time interval in seconds between two adjacent check.
             @debug(Boolean):    whether to print debug information
         '''
-        from astral import Astral
-        try:
-            import RPi.GPIO as GPIO
-        except RuntimeError:
-            exit("Error importing RPi.GPIO! Try to run it as root!")
         # Initialize Astral for sunrise/sunset time calculation
         self.astral = Astral()
         self.astral.solar_depression = 'civil'
@@ -31,6 +33,7 @@ class GpioOnSunSchedule:
         except KeyError as err:
             exit('%s is not in Astral database. Try your capital city.' % city)
         # Initialize GPIO
+        GPIO.setwarnings(False)
         GPIO.setmode(GPIO.BOARD)
         # Save parameters for later usage
         self.gpio_pin = gpio_pin
@@ -83,8 +86,15 @@ class GpioOnSunSchedule:
         except KeyboardInterrupt:
             pass
         finally:
-            print("Exiting... set GPIO pin #{0} to {1}.".format(self.gpio_pin, self.default_value))
-            GPIO.output(self.gpio_pin, self.default_value)
+            self.clean()
+    def clean(self):
+        GPIO.cleanup()
+
+def handler(signum, frame):
+    o = frame.f_globals['gpioOnSunSchedule']
+    o.clean()
+
+signal.signal(signal.SIGTERM, handler)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
