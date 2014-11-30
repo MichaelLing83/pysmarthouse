@@ -73,6 +73,7 @@ public:
     void off(void);
     
     void set_pattern(unsigned int _pattern);
+    void flash(unsigned int color, unsigned int interval = 100);
     void flash_pattern(unsigned int color);
 
     /**@}*/

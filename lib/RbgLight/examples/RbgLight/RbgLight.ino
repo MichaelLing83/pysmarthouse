@@ -10,8 +10,6 @@ Connection:
 #include "RbgLight.h"
 
 RbgLight rbgLight(9, 10, 11, HIGH);
-int v = 0;
-bool increase = true;
 
 // the setup function runs once when you press reset or power the board
 void setup() {
@@ -22,6 +20,11 @@ void setup() {
 // the loop function runs over and over again forever
 void loop() {
     //rbgLight.on(random(0, 8));
-    rbgLight.flash_pattern(random(0, 8));
-    delay(200);
+    //rbgLight.flash_pattern(random(0, 8));
+    //rbgLight.on(random(0, 8));
+    //digitalWrite(1, HIGH);
+    //delay(1000);
+    // rbgLight.off();
+    rbgLight.flash(random(1, 8));
+    delay(500);
 }

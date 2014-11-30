@@ -41,6 +41,13 @@ void RbgLight::begin()
     cur_lvl = 10;
 }
 
+void RbgLight::flash(unsigned int color, unsigned int interval)
+{
+    on(color);
+    delay(interval);
+    off();
+}
+
 /****************************************************************************/
 void RbgLight::off()
 {
