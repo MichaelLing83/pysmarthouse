@@ -21,6 +21,8 @@
 #define RBGLIGHT_BLUE 2
 #define RBGLIGHT_GREEN 4
 
+#define RBGLIGHT_PATTERN_PROGRESSING 0
+
 class RbgLight
 {
 private:
@@ -29,6 +31,10 @@ private:
     unsigned int g_pin;
     bool light_on_lvl;
     bool light_off_lvl;
+    unsigned int pattern;
+    bool pattern_progressing_increse;
+    unsigned int pattern_progressing_step;
+    unsigned int cur_lvl;
 
 public:
 
@@ -65,6 +71,9 @@ public:
     * Turn light off.
     */
     void off(void);
+    
+    void set_pattern(unsigned int _pattern);
+    void flash_pattern(unsigned int color);
 
     /**@}*/
 

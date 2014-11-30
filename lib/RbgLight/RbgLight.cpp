@@ -38,6 +38,7 @@ void RbgLight::begin()
     pinMode(r_pin, OUTPUT);
     pinMode(b_pin, OUTPUT);
     pinMode(g_pin, OUTPUT);
+    cur_lvl = 10;
 }
 
 /****************************************************************************/
@@ -54,4 +55,59 @@ RbgLight::RbgLight( unsigned int _r_pin, unsigned int _b_pin,
     r_pin(_r_pin), b_pin(_b_pin), g_pin(_g_pin), light_on_lvl(_light_on_lvl)
 {
     light_off_lvl = !light_on_lvl;
+    pattern_progressing_increse = true;
+    pattern_progressing_step = 20;
+}
+
+void RbgLight::set_pattern(unsigned int _pattern)
+{
+    switch (_pattern)
+    {
+        case RBGLIGHT_PATTERN_PROGRESSING:
+            pattern = RBGLIGHT_PATTERN_PROGRESSING;
+            break;
+        default:
+            pattern = RBGLIGHT_PATTERN_PROGRESSING;
+    }
+}
+
+void RbgLight::flash_pattern(unsigned int color)
+{
+    if (color & RBGLIGHT_RED)
+    {
+        analogWrite(r_pin, cur_lvl);
+    } else {
+        digitalWrite(r_pin, light_off_lvl);
+    }
+
+    if (color & RBGLIGHT_BLUE)
+    {
+        analogWrite(b_pin, cur_lvl);
+    } else {
+        digitalWrite(b_pin, light_off_lvl);
+    }
+
+    if (color & RBGLIGHT_GREEN)
+    {
+        analogWrite(g_pin, cur_lvl);
+    } else {
+        digitalWrite(g_pin, light_off_lvl);
+    }
+    // calculate next level
+    if (pattern_progressing_increse)
+    {
+        cur_lvl += pattern_progressing_step;
+        if (cur_lvl >= 256)
+        {
+            pattern_progressing_increse = false;
+            cur_lvl = 255;
+        }
+    } else {
+        cur_lvl -= pattern_progressing_step;
+        if (cur_lvl < 0)
+        {
+            pattern_progressing_increse = true;
+            cur_lvl = pattern_progressing_step;
+        }
+    }
 }
