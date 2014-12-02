@@ -1,3 +1,6 @@
 [submodule "lib/RF24"]
 	path = lib/RF24
 	url = https://github.com/TMRh20/RF24.git
+[submodule "lib/i2cdevlib"]
+	path = lib/i2cdevlib
+	url = https://github.com/jrowberg/i2cdevlib.git
