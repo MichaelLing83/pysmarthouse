@@ -4,3 +4,6 @@
 [submodule "lib/i2cdevlib"]
 	path = lib/i2cdevlib
 	url = https://github.com/jrowberg/i2cdevlib.git
+[submodule "lib/bitlash"]
+	path = lib/bitlash
+	url = https://github.com/billroy/bitlash.git
