@@ -35,6 +35,7 @@ private:
     bool pattern_progressing_increse;
     unsigned int pattern_progressing_step;
     unsigned int cur_lvl;
+    unsigned int _default_color;
 
 public:
 
@@ -75,6 +76,7 @@ public:
     void set_pattern(unsigned int _pattern);
     void flash(unsigned int color, unsigned int interval = 100);
     void flash_pattern(unsigned int color);
+    unsigned int default_color(void);
 
     /**@}*/
 

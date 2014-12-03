@@ -64,6 +64,7 @@ RbgLight::RbgLight( unsigned int _r_pin, unsigned int _b_pin,
     light_off_lvl = !light_on_lvl;
     pattern_progressing_increse = true;
     pattern_progressing_step = 20;
+    _default_color = RBGLIGHT_RED;
 }
 
 void RbgLight::set_pattern(unsigned int _pattern)
@@ -76,6 +77,11 @@ void RbgLight::set_pattern(unsigned int _pattern)
         default:
             pattern = RBGLIGHT_PATTERN_PROGRESSING;
     }
+}
+
+unsigned int RbgLight::default_color()
+{
+    return _default_color;
 }
 
 void RbgLight::flash_pattern(unsigned int color)
