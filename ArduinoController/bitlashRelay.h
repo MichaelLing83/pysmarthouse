@@ -41,3 +41,13 @@ numvar relay_get_pin(void)
 {
     return relay.pin();
 }
+
+void register_bitlash_relay(void)
+{
+    addBitlashFunction("relay_on", (bitlash_function) relay_on);
+    addBitlashFunction("relay_off", (bitlash_function) relay_off);
+    addBitlashFunction("relay_cur_lvl", (bitlash_function) relay_cur_lvl);
+    addBitlashFunction("relay_set_on_lvl", (bitlash_function) relay_set_on_lvl);
+    addBitlashFunction("relay_get_on_lvl", (bitlash_function) relay_get_on_lvl);
+    addBitlashFunction("relay_get_pin", (bitlash_function) relay_get_pin);
+}
