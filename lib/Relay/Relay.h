@@ -41,5 +41,3 @@ public:
 };
 
 #endif // __RELAY_H__
-
-
