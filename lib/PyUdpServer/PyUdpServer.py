@@ -10,17 +10,33 @@ All clients have to follow this format when sending to this server:
             value: integer in unit of 0.001
         Exemples:
             "frontyard_controller;temperature;-1900"    ->  frontyard_controller sent us with temperature of -19.00 degree Celsius
+
+    Database:
+        Name: pysmarthouse.db
+        Database: sqlite3
+        Table name: pysmarthouse
+        Table format: (Time text, ID text, Type text, Value real)
 '''
 import socketserver
+import sqlite3
+import datetime
 
 class UDPHandler(socketserver.BaseRequestHandler):
+
+    def __init__(self):
+        super.__init__(self)
+        self.conn = sqlite3.connect("./pysmarthouse.db")
+        self.c = self.conn.cursor()
 
     def handle(self):
         data = self.request[0].strip()
         socket = self.request[1]
-        # print("{} wrote:".format(self.client_address[0]))
-        # print(data)
-        socket.sendto(data.upper(), self.client_address)
+        #socket.sendto(data.upper(), self.client_address)
+        _id, _type, _value = data.split(';')
+        _value = float(_value) / 100
+        _time = str(datetime.datetime.utcnow())
+        self.c.execute("INSERT INTO pysmarthouse VALUES (_time, _id, _type, _value)")
+        
 
 if __name__ == "__main__":
     HOST, PORT = "", 9999   ## all interfaces
