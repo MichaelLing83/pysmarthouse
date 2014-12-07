@@ -39,6 +39,7 @@
 #include "bitlash.h"
 #include <OneWire.h>
 #include "Relay.h"
+#include "TemperatureSensor.h"
 #include "LightSensor.h"
 #include "InfraredSensor.h"
 
@@ -59,6 +60,8 @@ Relay relay(RELAY_IN_PORT, RELAY_OFF);
 OneWire ds18b20(DS18B20_PIN);
 LightSensor lightSensor(LIGHTSENSOR_PORT);
 InfraredSensor infraredSensor(INFRAREDSENSOR_PORT);
+
+unsigned long last_report_time;
 /**** End of Global Variables ************************************************/
 
 /**** Function Wrapping for bitlash ******************************************/
@@ -78,8 +81,28 @@ void setup() {
     register_bitlash_relay();
     register_bitlash_ds18b20();
     register_bitlash_infraredSensor();
+    
+    last_report_time = 0;
 }
 
 // the loop function runs over and over again forever
 void loop() {
+    // we send a report every 5 minutes
+    unsigned long cur_time = millis();
+    bool do_report = false;
+    if (cur_time < last_report_time)
+    {
+        // time counter has wrapped around.
+        do_report = true;
+    }
+    else if (cur_time - last_report_time >= 5*60*1000)
+    {
+        do_report = true;
+    }
+
+    if (do_report)
+    {
+        last_report_time = cur_time;
+        float temperature = get_temperature(&ds18b20);
+    }
 }
