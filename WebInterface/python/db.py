@@ -9,6 +9,7 @@ Database table structure:
 import sqlite3
 import datetime
 import os.path
+import logging
 
 PATH_TO_DB = "/home/pi/git/pysmarthouse/WebInterface/data/pysmarthouse.db"
 ALL_IDS = ("Kitchen", "FrontYard", "SunRoom", "GuestTiolet", "MainToilet", "Bedroom_1", "Bedroom_2", "Bedroom_3")
@@ -42,19 +43,28 @@ class DB:
     def gen_new_db():
         global PATH_TO_DB
         try:
+            logging.info("Trying to create DB at {}".format(PATH_TO_DB))
             conn = sqlite3.connect(PATH_TO_DB, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
+            logging.info("DB created at {}".format(PATH_TO_DB))
         except sqlite3.OperationalError as e:
             # path not found, possibly it's not running on the right Raspberry Pi
             # use PWD instead
+            logging.warning("Path could not be found: {}".format(PATH_TO_DB))
             PATH_TO_DB = "./pysmarthouse.db"
+            logging.warning("Trying to create DB at {} instead.".format(PATH_TO_DB))
             conn = sqlite3.connect(PATH_TO_DB, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
+            logging.warning("DB created at {}".format(PATH_TO_DB))
         c = conn.cursor()
         c.execute("drop table if exists pysmarthouse")
+        logging.info("Table pysmarthouse is dropped should it exist.")
         c.execute("create table pysmarthouse (id text, t text, v real, ts timestamp)")
+        logging.info("Table pysmarthouse created with (id text, t text, v real, ts timestamp).")
     def __init__(self):
+        logging.info("Initializing DB instance...")
         if not os.path.isfile(PATH_TO_DB): DB.gen_new_db()
         self.conn = sqlite3.connect(PATH_TO_DB, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
         self.c = self.conn.cursor()
+        logging.info("Initializing DB instance done.")
     def insert(self, id, t, v, ts=datetime.datetime.now()):
         # check parameter
         check(id, str, ALL_IDS)
@@ -64,11 +74,13 @@ class DB:
         # insert into database
         self.c.execute("insert into pysmarthouse(id,t,v,ts) values (?,?,?,?)", (id, t, v, ts))
         self.conn.commit()
+        logging.info("Record with id={}, t={}, v={}, ts={} is inserted.".format(id, t, v, ts))
     def get_records(self, half_delta=datetime.timedelta(hours=12), ts=datetime.datetime.now()):
         '''
         Return all records among |now()-ts| < half_delta
         Result is sorted by timestamp.
         '''
+        logging.debug("half_delta={}, ts={}".format(half_delta, ts))
         check(half_delta, datetime.timedelta, None)
         check(ts, datetime.datetime, None)
         result = list()
@@ -77,9 +89,8 @@ class DB:
         while record:
             if abs(record[-1] - ts) < half_delta: result.append(record)
             record = self.c.fetchone()
+        logging.debug("Found records: {}".format(result))
         return tuple(result)
-
-db = DB()
 
 if __name__ == '__main__':
     PATH_TO_DB = "./pysmarthouse.db"

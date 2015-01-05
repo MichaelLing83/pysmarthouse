@@ -32,10 +32,9 @@ All clients have to follow this format when sending to this server:
             threshold is reached, etc. When client sends a report, it waits for an response which is a "CMD" datagram, and executes <cmd>
             in the datagram.
 '''
-
+import logging
 import db
 import socketserver
-import logging
 import argparse
 
 HOST = "0.0.0.0"
@@ -59,7 +58,7 @@ class RaspberryPiHandler(socketserver.BaseRequestHandler):
             operation, id = datagram[0:2]
             type_value_list = datagram[2:]
             for i in range(0, len(type_value_list), 2):
-                db.db.insert(id, type_value_list[i], type_value_list[i+1])
+                db.DB().insert(id, type_value_list[i], type_value_list[i+1])
         # send a CMD datagram back
         # TODO: add real logic, for now only empty cmd is sent.
         cmd = ""
@@ -73,7 +72,7 @@ if __name__ == '__main__':
     if args.verbosity > 4:
         args.verbosity = 4
     log_lvl = (logging.CRITICAL, logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG)[args.verbosity]
-    logging.basicConfig(level=log_lvl)
+    logging.basicConfig(level=log_lvl, format='%(filename)s:%(levelname)s:%(message)s')
     logging.info("Starting UdpServer instance...")
     server = socketserver.UDPServer((HOST, PORT), RaspberryPiHandler)
     logging.info("UdpServer instance started.")
