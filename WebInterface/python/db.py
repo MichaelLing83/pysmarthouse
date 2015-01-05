@@ -40,7 +40,14 @@ def check(p, t, r):
 class DB:
     @staticmethod
     def gen_new_db():
-        conn = sqlite3.connect(PATH_TO_DB, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
+        global PATH_TO_DB
+        try:
+            conn = sqlite3.connect(PATH_TO_DB, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
+        except sqlite3.OperationalError as e:
+            # path not found, possibly it's not running on the right Raspberry Pi
+            # use PWD instead
+            PATH_TO_DB = "./pysmarthouse.db"
+            conn = sqlite3.connect(PATH_TO_DB, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
         c = conn.cursor()
         c.execute("drop table if exists pysmarthouse")
         c.execute("create table pysmarthouse (id text, t text, v real, ts timestamp)")
@@ -71,6 +78,8 @@ class DB:
             if abs(record[-1] - ts) < half_delta: result.append(record)
             record = self.c.fetchone()
         return tuple(result)
+
+db = DB()
 
 if __name__ == '__main__':
     PATH_TO_DB = "./pysmarthouse.db"
