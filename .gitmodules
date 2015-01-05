@@ -7,3 +7,6 @@
 [submodule "lib/bitlash"]
 	path = lib/bitlash
 	url = https://github.com/billroy/bitlash.git
+[submodule "lib/Esp8266"]
+	path = lib/Esp8266
+	url = https://github.com/MichaelLing83/ITEADLIB_Arduino_ESP8266.git
