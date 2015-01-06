@@ -57,13 +57,21 @@ class RaspberryPiHandler(socketserver.BaseRequestHandler):
             logging.info("Incoming datagram: {}".format(';'.join(datagram)))
             operation, id = datagram[0:2]
             type_value_list = datagram[2:]
+            relay = 0
             for i in range(0, len(type_value_list), 2):
                 db.DB().insert(id, type_value_list[i], type_value_list[i+1])
+                if type_value_list[0] == "Relay":
+                    relay = int(type_value_list[1]) / 100
         # send a CMD datagram back
         # TODO: add real logic, for now only empty cmd is sent.
-        cmd = ""
+        if relay:
+            cmd = "relay_off();"
+        else:
+            cmd = "relay_on();"
         socket = self.request[1]
-        socket.sendto("CMD;{}".format(cmd), self.client_address)
+        cmd = "CMD;{}".format(cmd)
+        socket.sendto(cmd, self.client_address)
+        logging.info("Sent \"{}\"".format(cmd))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

@@ -50,13 +50,18 @@
         2. Use bitlash to open a control "port":
             simply execute whatever string command is received
         3. Report back readings from sensors through ESP8266
+    
+    Binary sketch size:         28458 Bytes
+    Binary sketch size limit:
+    Arduino Uno:                32256 Bytes
+    Arduino Nano w/ ATmega328:  30720 Bytes
 */
 #include "bitlash.h"
-#include <OneWire.h>
+//#include <OneWire.h>
 #include "Relay.h"
-#include "TemperatureSensor.h"
-#include "LightSensor.h"
-#include "InfraredSensor.h"
+//#include "TemperatureSensor.h"
+//#include "LightSensor.h"
+//#include "InfraredSensor.h"
 #include "uartWIFI.h"
 #include <SoftwareSerial.h>
 
@@ -65,26 +70,26 @@
 #define RELAY_IN_PORT   3
 #define RELAY_OFF   HIGH
 // Temperature sensor (DS18B20) related
-#define DS18B20_PIN 4
+//#define DS18B20_PIN 4
 // Light sensor
-#define LIGHTSENSOR_PORT 5
+//#define LIGHTSENSOR_PORT 5
 // Infrared sensor
-#define INFRAREDSENSOR_PORT 6
+//#define INFRAREDSENSOR_PORT 6
 // WIFI config for ESP8266
 #define SSID       "michael"
 #define PASSWORD   "waterpigs"
 #define SERVER_IP "192.168.31.107" //RaspberryPi
 #define SERVER_PORT 9999
 // Reporting configuration
-#define REPORT_INTERVAL 60  // in seconds, between two reports
+#define REPORT_INTERVAL 10  // in seconds, between two reports
 #define ARDUINO_ID "FrontDoorStep"  // ID
 /**** End of Defines *********************************************************/
 
 /**** Global Variables *******************************************************/
 Relay relay(RELAY_IN_PORT, RELAY_OFF);
-OneWire ds18b20(DS18B20_PIN);
-LightSensor lightSensor(LIGHTSENSOR_PORT);
-InfraredSensor infraredSensor(INFRAREDSENSOR_PORT);
+//OneWire ds18b20(DS18B20_PIN);
+//LightSensor lightSensor(LIGHTSENSOR_PORT);
+//InfraredSensor infraredSensor(INFRAREDSENSOR_PORT);
 WIFI wifi;  // ESP8266 serial over Wifi
 char wifiBuffer[128];   // buffer for receiving data
 
@@ -93,21 +98,21 @@ unsigned long last_report_time;
 
 /**** Function Wrapping for bitlash ******************************************/
 #include "bitlashRelay.h"
-#include "bitlashDS18B20.h"
-#include "bitlashLightSensor.h"
-#include "bitlashInfraredSensor.h"
+//#include "bitlashDS18B20.h"
+//#include "bitlashLightSensor.h"
+//#include "bitlashInfraredSensor.h"
 /**** Function Wrapping for bitlash ******************************************/
 
 // the setup function runs once when you press reset or power the board
 void setup() {
     relay.begin(RELAY_OFF);
-    lightSensor.begin();
-    infraredSensor.begin();
+    //lightSensor.begin();
+    //infraredSensor.begin();
 
     // register all bitlash functions
     register_bitlash_relay();
-    register_bitlash_ds18b20();
-    register_bitlash_infraredSensor();
+    //register_bitlash_ds18b20();
+    //register_bitlash_infraredSensor();
 
     last_report_time = 0;
 
@@ -151,17 +156,17 @@ void loop() {
         report += String(int(100 * relay.cur_lvl()));
         report += ";";
         // temperature sensor
-        report += "Temperature;";
-        report += String(int(100 * get_temperature(&ds18b20)));
-        report += ";";
+        //report += "Temperature;";
+        //report += String(int(100 * get_temperature(&ds18b20)));
+        //report += ";";
         // light sensor
-        report += "Light;";
-        report += String(int(100 * lightSensor.get()));
-        report += ";";
+        //report += "Light;";
+        //report += String(int(100 * lightSensor.get()));
+        //report += ";";
         // infra-red sensor
-        report += String("Infrared;");
-        report += String(int(100 * infraredSensor.get()));
-        report += ";";
+        //report += String("Infrared;");
+        //report += String(int(100 * infraredSensor.get()));
+        //report += ";";
         wifi.Send(report);
         delay(2000);    // do we need to be sure sending is finished?
 
