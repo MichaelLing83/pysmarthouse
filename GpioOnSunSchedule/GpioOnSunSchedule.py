@@ -59,7 +59,7 @@ class GpioOnSunSchedule:
                 print("Sunrise at {0}".format(sunrise))
                 print("Sunset at {0}".format(sunset))
                 print("Now is {0}".format(now))
-            if now > sunrise + datetime.timedelta(hours=1) and now < sunset - datetime.timedelta(hours=1):
+            if now > sunrise + datetime.timedelta(hours=0.5) and now < sunset - datetime.timedelta(hours=0.5):
                 # sun is in the sky
                 if self.debug:
                     print("Sun is in the sky! GPIO pin #{0} is {1}.".format(self.gpio_pin, current_value))
