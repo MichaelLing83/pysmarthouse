@@ -45,6 +45,8 @@ class RaspberryPiHandler(socketserver.BaseRequestHandler):
     Handles one incoming datagram.
     """
     def handle(self):
+        logging.info("On socket({}) received \"{}\"".format(self.request[1], self.request[0]))
+        logging.debug("type(self.request[0])={}".format(type(self.request[0])))
         datagram = self.request[0].strip().split(';')
         # check if incoming datagram is legal
         if len(datagram) < 1 + 1 + 2:   # minimum datagram: "<operation>;<ID>;<type>;<value>"
