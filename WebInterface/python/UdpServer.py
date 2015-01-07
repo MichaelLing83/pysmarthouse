@@ -49,7 +49,8 @@ class RaspberryPiHandler(socketserver.BaseRequestHandler):
         logging.info("On socket({}) received \"{}\"".format(self.request[1], self.request[0]))
         logging.debug("type(self.request[0])={}".format(type(self.request[0])))
         datagram = self.request[0].decode(encoding=ENCODING).strip().split(';')
-        datagram.remove('') # remove empty items (usually at the end)
+        for i in range(datagram.count('')):
+            datagram.remove('') # remove empty items
         relay = 0
         # check if incoming datagram is legal
         if len(datagram) < 1 + 1 + 2:   # minimum datagram: "<operation>;<ID>;<type>;<value>"
