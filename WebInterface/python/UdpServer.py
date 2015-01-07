@@ -15,14 +15,15 @@ All clients have to follow this format when sending to this server:
                 <value>: integer in unit of 0.001, e.g. "-1800" means -18.00
                 Example: "REPORT;KitchenWindow;Temperature;2300;Relay;100", means the sender "KitchenWindow" reports a temperature at 23.00
                 degree Celsius and its relay at value 1.00 (ON).
-            When <operation>="CMD", the datagram is composed of 1+1*n (n=0,1,2,...) fields in strict order of "CMD", (<cmd>)+:
+            When <operation>="CMD", the datagram is composed of a string. Each char in the string represents one command.:
                 <cmd>: the command receiver should execute.
-                Example: "CMD;relay_on();delay(1000);relay_off()", means after receiving this datagram the receiver should execute
-                "relay_on()" and then "delay(1000)" and then "relay_off()".
+                    Example: "CMD;d12ksdi"
         2) semantics
             client -> server: only "REPORT" operation is supported, e.g. "REPORT;Doorstep;Temperature;-1900", means client named "Doorstep"
             reports a temperature at -19.00 degree Celsius. How server uses the content of this report is completely up to the server.
-            server -> client: only "CMD" operation is supported, e.g. "CMD;reset".
+            server -> client: only "CMD" operation is supported, e.g. "CMD;d". Mapping of char and commands:
+                char    commands/function calls
+                d       delay(500)
         3) timing
             A TIMEOUT of 4 seconds is applied to each receiving attempt, if no response is received before timeout, operator should just
             reset its status and try again later (ideally a counter of consecutive timeout should also be maintained).

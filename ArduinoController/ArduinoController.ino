@@ -47,35 +47,60 @@
 
     Overall description:
         1. Use ESP8266 to connect to house's wifi and then to Raspberry Pi;
-        2. Use bitlash to open a control "port":
-            simply execute whatever string command is received
+        2. Use UDP datagram and character->command mapping to open a control "port":
+            simply execute whatever command is received
         3. Report back readings from sensors through ESP8266
-    
-    Binary sketch size:         28458 Bytes
+
+    Binary sketch size:         16278 Bytes (if all chips are used)
     Binary sketch size limit:
     Arduino Uno:                32256 Bytes
     Arduino Nano w/ ATmega328:  30720 Bytes
 */
-#include "bitlash.h"
-//#include <OneWire.h>
-#include "Relay.h"
-//#include "TemperatureSensor.h"
-//#include "LightSensor.h"
-//#include "InfraredSensor.h"
+
+/**** Chip Usage **************************************************************
+    Comment out the define if the chip is not used.
+*/
+#define USE_RELAY
+//#define USE_TEMPERATURE_SENSOR
+//#define USE_LIGHT_SENSOR
+//#define USE_INFRARED_SENSOR
+// ESP8266 is always used
+/**** End of Chip Usage ******************************************************/
+
+/**** Chip Connection *********************************************************
+    Change port connection if otherwise
+*/
+#ifdef USE_RELAY
+    #include "Relay.h"
+    #define RELAY_IN_PORT   3
+    #define RELAY_OFF   HIGH
+    Relay relay(RELAY_IN_PORT, RELAY_OFF);
+#endif
+
+#ifdef USE_TEMPERATURE_SENSOR
+    #include <OneWire.h>
+    #include "TemperatureSensor.h"
+    #define DS18B20_PIN 4
+    OneWire ds18b20(DS18B20_PIN);
+#endif
+
+#ifdef USE_LIGHT_SENSOR
+    #include "LightSensor.h"
+    #define LIGHTSENSOR_PORT 5
+    LightSensor lightSensor(LIGHTSENSOR_PORT);
+#endif
+
+#ifdef USE_INFRARED_SENSOR
+    #include "InfraredSensor.h"
+    #define INFRAREDSENSOR_PORT 6
+    InfraredSensor infraredSensor(INFRAREDSENSOR_PORT);
+#endif
+/**** End of Chip Connection *************************************************/
+
+/**** ESP8266 Configurations *************************************************/
 #include "uartWIFI.h"
 #include <SoftwareSerial.h>
-
-/**** Defines ****************************************************************/
-// Relay related
-#define RELAY_IN_PORT   3
-#define RELAY_OFF   HIGH
-// Temperature sensor (DS18B20) related
-//#define DS18B20_PIN 4
-// Light sensor
-//#define LIGHTSENSOR_PORT 5
-// Infrared sensor
-//#define INFRAREDSENSOR_PORT 6
-// WIFI config for ESP8266
+#include "Cmd.h"
 #define SSID       "michael"
 #define PASSWORD   "waterpigs"
 #define SERVER_IP "192.168.31.107" //RaspberryPi
@@ -83,36 +108,24 @@
 // Reporting configuration
 #define REPORT_INTERVAL 10  // in seconds, between two reports
 #define ARDUINO_ID "FrontDoorStep"  // ID
+WIFI wifi;  // ESP8266 serial over Wifi
+char wifiBuffer[128];   // buffer for receiving data
+/**** End of ESP8266 Configurations ******************************************/
+
+/**** Defines ****************************************************************/
 /**** End of Defines *********************************************************/
 
 /**** Global Variables *******************************************************/
-Relay relay(RELAY_IN_PORT, RELAY_OFF);
-//OneWire ds18b20(DS18B20_PIN);
-//LightSensor lightSensor(LIGHTSENSOR_PORT);
-//InfraredSensor infraredSensor(INFRAREDSENSOR_PORT);
-WIFI wifi;  // ESP8266 serial over Wifi
-char wifiBuffer[128];   // buffer for receiving data
-
 unsigned long last_report_time;
 /**** End of Global Variables ************************************************/
 
-/**** Function Wrapping for bitlash ******************************************/
-#include "bitlashRelay.h"
-//#include "bitlashDS18B20.h"
-//#include "bitlashLightSensor.h"
-//#include "bitlashInfraredSensor.h"
-/**** Function Wrapping for bitlash ******************************************/
-
 // the setup function runs once when you press reset or power the board
 void setup() {
-    relay.begin(RELAY_OFF);
+    #ifdef USE_RELAY
+        relay.begin(RELAY_OFF);
+    #endif
     //lightSensor.begin();
     //infraredSensor.begin();
-
-    // register all bitlash functions
-    register_bitlash_relay();
-    //register_bitlash_ds18b20();
-    //register_bitlash_infraredSensor();
 
     last_report_time = 0;
 
@@ -126,8 +139,6 @@ void setup() {
 
     //delay(5000);
     wifi.ipConfig(UDP, SERVER_IP, SERVER_PORT); // configure server info
-
-    //DebugSerial.println("setup done..");
 }
 
 // the loop function runs over and over again forever
@@ -152,21 +163,29 @@ void loop() {
         report += ARDUINO_ID;
         report += ";";
         // relay status
-        report += "Relay;";
-        report += String(int(100 * relay.cur_lvl()));
-        report += ";";
+        #ifdef USE_RELAY
+            report += "Relay;";
+            report += String(int(100 * relay.cur_lvl()));
+            report += ";";
+        #endif
         // temperature sensor
-        //report += "Temperature;";
-        //report += String(int(100 * get_temperature(&ds18b20)));
-        //report += ";";
+        #ifdef USE_TEMPERATURE_SENSOR
+            report += "Temperature;";
+            report += String(int(100 * get_temperature(&ds18b20)));
+            report += ";";
+        #endif
         // light sensor
-        //report += "Light;";
-        //report += String(int(100 * lightSensor.get()));
-        //report += ";";
+        #ifdef USE_LIGHT_SENSOR
+            report += "Light;";
+            report += String(int(100 * lightSensor.get()));
+            report += ";";
+        #endif
         // infra-red sensor
-        //report += String("Infrared;");
-        //report += String(int(100 * infraredSensor.get()));
-        //report += ";";
+        #ifdef USE_INFRARED_SENSOR
+            report += String("Infrared;");
+            report += String(int(100 * infraredSensor.get()));
+            report += ";";
+        #endif
         wifi.Send(report);
         delay(2000);    // do we need to be sure sending is finished?
 
@@ -177,14 +196,7 @@ void loop() {
             if (datagram.startsWith("CMD;", 0)) {
                 // this is a valid CMD datagram
                 datagram = datagram.substring(4);
-                while (datagram.length() > 0) {
-                    // there is at least one cmd to be executed
-                    int index = datagram.indexOf(';');
-                    String cmd = datagram.substring(0, index);
-                    cmd.toCharArray(wifiBuffer, cmd.length());
-                    doCommand(wifiBuffer);
-                    datagram = datagram.substring(index+1);
-                }
+                Cmd(datagram).execute();
             }
         }
     }
