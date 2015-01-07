@@ -7,13 +7,13 @@ All clients have to follow this format when sending to this server:
     2. Port 9999
     3. Communication protocol (version 0.1):
         1) syntax (all letters are case sensitive)
-            All fields are separated by a ";", and usage of ";" within any field is forbidden. After the last field, there is no ";". Each
+            All fields are separated by a ";", and usage of ";" within any field is forbidden. A datagram must be ended with an ";". Each
             field is a ASCII string. The first field is <operation>, which must be one of "REPORT" or "CMD".
             When <operation>="REPORT", datagram is composed of 1+1+2*n (n=1,2,...) fields in order of "REPORT", <ID>, (<type>, <value>)+:
                 <ID>: identity of the client, usually a geometry location name of an Arduino, e.g. "KitchenWindow", "FrontYard"
                 <type>: type of report, i.e. what the <value> field in this report refers to, e.g. "Temperature", "InternetConnectivity"
                 <value>: integer in unit of 0.001, e.g. "-1800" means -18.00
-                Example: "REPORT;KitchenWindow;temperature;2300;relay;100", means the sender "KitchenWindow" reports a temperature at 23.00
+                Example: "REPORT;KitchenWindow;Temperature;2300;Relay;100", means the sender "KitchenWindow" reports a temperature at 23.00
                 degree Celsius and its relay at value 1.00 (ON).
             When <operation>="CMD", the datagram is composed of 1+1*n (n=0,1,2,...) fields in strict order of "CMD", (<cmd>)+:
                 <cmd>: the command receiver should execute.
@@ -39,6 +39,7 @@ import argparse
 
 HOST = "0.0.0.0"
 PORT = 9999
+ENCODING = "ASCII"
 
 class RaspberryPiHandler(socketserver.BaseRequestHandler):
     """
@@ -47,23 +48,26 @@ class RaspberryPiHandler(socketserver.BaseRequestHandler):
     def handle(self):
         logging.info("On socket({}) received \"{}\"".format(self.request[1], self.request[0]))
         logging.debug("type(self.request[0])={}".format(type(self.request[0])))
-        datagram = self.request[0].strip().split(';')
+        datagram = self.request[0].decode(encoding=ENCODING).strip().split(';')
+        datagram.remove('') # remove empty items (usually at the end)
+        relay = 0
         # check if incoming datagram is legal
         if len(datagram) < 1 + 1 + 2:   # minimum datagram: "<operation>;<ID>;<type>;<value>"
             logging.warning("Incoming datagram is too short (len={})! {}".format(len(datagram), ';'.join(datagram)))
         elif datagram[0] != "REPORT":   # only <operation>="REPORT" is supported for client->server communication
+            logging.debug("<operation>={}".format(datagram[0]))
             logging.warning("Incoming datagram has unsupported <operation>=\"{}\"! {}".format(datagram[0], ';'.join(datagram)))
         elif (len(datagram) - 2) % 2 != 0:  # <type>;<value> are pairs
+            logging.debug(datagram)
             logging.warning("Incoming datagram has wrong number of fields (len={})! {}".format(len(datagram), ';'.join(datagram)))
         else:   # basic check passed
             logging.info("Incoming datagram: {}".format(';'.join(datagram)))
             operation, id = datagram[0:2]
             type_value_list = datagram[2:]
-            relay = 0
             for i in range(0, len(type_value_list), 2):
-                db.DB().insert(id, type_value_list[i], type_value_list[i+1])
+                db.DB().insert(id, type_value_list[i], float(type_value_list[i+1])/100)
                 if type_value_list[0] == "Relay":
-                    relay = int(type_value_list[1]) / 100
+                    relay = float(type_value_list[1]) / 100
         # send a CMD datagram back
         # TODO: add real logic, for now only empty cmd is sent.
         if relay:
@@ -72,7 +76,7 @@ class RaspberryPiHandler(socketserver.BaseRequestHandler):
             cmd = "relay_on();"
         socket = self.request[1]
         cmd = "CMD;{}".format(cmd)
-        socket.sendto(cmd, self.client_address)
+        socket.sendto(cmd.encode(encoding=ENCODING), self.client_address)
         logging.info("Sent \"{}\"".format(cmd))
 
 if __name__ == '__main__':

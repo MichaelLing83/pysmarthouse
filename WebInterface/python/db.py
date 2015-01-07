@@ -2,7 +2,7 @@
 '''
 Database table structure:
     id text, t text, v real, ts timestamp
-    
+
     Example:
         "Kitchen", "Temperature", 25.67, "2014-12-10 17:25:53.956548"
 '''
@@ -12,7 +12,7 @@ import os.path
 import logging
 
 PATH_TO_DB = "/home/pi/git/pysmarthouse/WebInterface/data/pysmarthouse.db"
-ALL_IDS = ("Kitchen", "FrontYard", "SunRoom", "GuestTiolet", "MainToilet", "Bedroom_1", "Bedroom_2", "Bedroom_3")
+ALL_IDS = ("KitchenWindow", "FrontYard", "SunRoom", "GuestTiolet", "MainToilet", "Bedroom_1", "Bedroom_2", "Bedroom_3")
 ALL_TYPES = ("Temperature", "Relay")
 
 class PSMError(Exception):
@@ -29,7 +29,7 @@ def check(p, t, r):
         check(5, int, range(4,9))
     '''
     if not isinstance(t, type): raise PSMError("{0} is not a type!".format(t))
-    if not isinstance(p, t): raise PSMError("{0} is not of type {1}!",format(p, t))
+    if not isinstance(p, t): raise PSMError("{0} is not of type {1}!".format(p, t))
     if isinstance(r, range) or isinstance(r, tuple) or isinstance(r, list):
         if not p in r: raise PSMError("{0} is not in {1}!".format(p, r))
     elif r == None:
