@@ -1,239 +1,228 @@
 #include "uartWIFI.h"
 
 #ifdef UNO
-
-SoftwareSerial mySerial(_DBG_RXPIN_, _DBG_TXPIN_);
-
+    #ifdef ESP8266_DEBUG
+        SoftwareSerial softSerial(_DBG_RXPIN_, _DBG_TXPIN_);
+    #endif
 #endif
 
 #ifdef DEBUG
-#define DBG(message)    DebugSerial.println(message)
-#define DBGW(message)    DebugSerial.write(message)
+    #define DBG(message)    DebugSerial.println(message)
+    #define DBGW(message)   DebugSerial.write(message)
 #else
-#define DBG(message)
-#define DBGW(message)
+    #define DBG(message)
+    #define DBGW(message)
 #endif // DEBUG
 
-int chlID;		//client id(0-4)
+int chlID;  //client id(0-4)
 
 void WIFI::begin(void)
 {
-	boolean result = false;
-	_cell.begin(9600);	//The default baud rate of ESP8266 is 115200
-
-	DebugSerial.begin(debugBaudRate);		//The default baud rate for debugging is 9600
-	_cell.flush();
-	_cell.setTimeout(ESP8266_TIMEOUT);
-    if (Reset()) {
-        DBG("ESP8266 is ready.");
-    } else {
-        DBG("ESP8266 have no response.");
-        while(1);
-    }
+    _cell.begin(ESP8266_BAUDRATE);
+    #ifdef ESP8266_DEBUG
+        DebugSerial.begin(debugBaudRate);   //The default baud rate for debugging is 9600
+    #endif
+    _cell.flush();
+    _cell.setTimeout(ESP8266_TIMEOUT);
+    Reset();    // TODO: at other places, Reset results are not checked, is it a problem that Reset fails?
 }
 
 
 /*************************************************************************
-//Initialize port
+Initialize port
 
-	mode:	setting operation mode
-		STA: 	Station
-		AP:	 	Access Point
-		AT_STA:	Access Point & Station
+    mode:    setting operation mode
+        STA:        Station
+        AP:         Access Point
+        AT_STA:     Access Point & Station
+    ssid:   Wifi SSID (network name)
+    pwd:    Wifi password
+    chl:    channel number if AP or AP_STA
+    ecn:    encryption method if AP or AP_STA
+        OPEN          0
+        WEP           1
+        WAP_PSK       2
+        WAP2_PSK      3
+        WAP_WAP2_PSK  4
 
-	chl:	channel number
-	ecn:	encryption
-		OPEN          0
-		WEP           1
-		WAP_PSK       2
-		WAP2_PSK      3
-		WAP_WAP2_PSK  4
-
-	return:
-		true	-	successfully
-		false	-	unsuccessfully
+    return:
+        true    -    successfully
+        false   -    unsuccessfully
 
 ***************************************************************************/
-bool WIFI::Initialize(byte mode, String ssid, String pwd, byte chl, byte ecn)
+boolean WIFI::Initialize(byte mode, String ssid, String pwd, byte chl, byte ecn)
 {
-	if (mode == STA)
-	{
-		bool b = confMode(mode);
-		if (!b)
-		{
-			return false;
-		}
-		Reset();
-		confJAP(ssid, pwd);
-	}
-	else if (mode == AP)
-	{
-		bool b = confMode(mode);
-		if (!b)
-		{
-			return false;
-		}
-		Reset();
-		confSAP(ssid, pwd, chl, ecn);
-	}
-	else if (mode == AP_STA)
-	{
-		bool b = confMode(mode);
-		if (!b)
-		{
-			return false;
-		}
-		Reset();
-		confJAP(ssid, pwd);
-		confSAP(ssid, pwd, chl, ecn);
-	}
-
-	return true;
+    boolean result = false;
+    if (mode == STA || mode == AP || mode == AP_STA) {
+        result = confMode(mode);
+        Reset();
+        // TODO: if confMode fails, does it make sense to continue with confJAP and confSAP?
+        switch (mode) {
+            case STA:
+                /* result = confMode(mode);
+                Reset(); */
+                confJAP(ssid, pwd);
+                break;
+            case AP:
+                /* result = confMode(mode);
+                Reset(); */
+                confSAP(ssid, pwd, chl, ecn);
+                break;
+            case AP_STA:
+                /* result = confMode(mode);
+                Reset(); */
+                confJAP(ssid, pwd);
+                confSAP(ssid, pwd, chl, ecn);
+                break;
+            default: break;
+        }
+    }
+    return result;
 }
 
 /*************************************************************************
-//Set up tcp or udp connection
+Set up TCP or UDP connection
 
-	type:	tcp or udp
+    type:    tcp or udp
 
-	addr:	ip address
+    addr:    ip address
 
-	port:	port number
+    port:    port number
 
-	a:	set multiple connection
-		0 for sigle connection
-		1 for multiple connection
+    a:    set multiple connection
+        0 for sigle connection
+        1 for multiple connection
 
-	id:	id number(0-4)
+    id:    id number(0-4)
 
-	return:
-		true	-	successfully
-		false	-	unsuccessfully
+    return:
+        true    -    successfully
+        false    -    unsuccessfully
 
 ***************************************************************************/
 boolean WIFI::ipConfig(byte type, String addr, int port, boolean a, byte id)
 {
-	boolean result = false;
-	if (a == 0 )
-	{
-		confMux(a);
+    boolean result = false;
+    if (a == 0 )
+    {
+        confMux(a);
 
-		long timeStart = millis();
-		while (1)
-		{
-			long time0 = millis();
-			if (time0 - timeStart > 5000)
-			{
-				break;
-			}
-		}
-		result = newMux(type, addr, port);
-	}
-	else if (a == 1)
-	{
-		confMux(a);
-		long timeStart = millis();
-		while (1)
-		{
-			long time0 = millis();
-			if (time0 - timeStart > 5000)
-			{
-				break;
-			}
-		}
-		result = newMux(id, type, addr, port);
-	}
-	return result;
+        long timeStart = millis();
+        while (1)
+        {
+            long time0 = millis();
+            if (time0 - timeStart > 5000)
+            {
+                break;
+            }
+        }
+        result = newMux(type, addr, port);
+    }
+    else if (a == 1)
+    {
+        confMux(a);
+        long timeStart = millis();
+        while (1)
+        {
+            long time0 = millis();
+            if (time0 - timeStart > 5000)
+            {
+                break;
+            }
+        }
+        result = newMux(id, type, addr, port);
+    }
+    return result;
 }
 
 /*************************************************************************
 //receive message from wifi
 
-	buf:	buffer for receiving data
+    buf:    buffer for receiving data
 
-	chlID:	<id>(0-4)
+    chlID:    <id>(0-4)
 
-	return:	size of the buffer
+    return:    size of the buffer
 
 
 ***************************************************************************/
 int WIFI::ReceiveMessage(char *buf)
 {
-	//+IPD,<len>:<data>
-	//+IPD,<id>,<len>:<data>
-	String data = "";
-	if (_cell.available()>0)
-	{
+    //+IPD,<len>:<data>
+    //+IPD,<id>,<len>:<data>
+    String data = "";
+    if (_cell.available()>0)
+    {
 
-		unsigned long start;
-		start = millis();
-		char c0 = _cell.read();
-		if (c0 == '+')
-		{
+        unsigned long start;
+        start = millis();
+        char c0 = _cell.read();
+        if (c0 == '+')
+        {
 
-			while (millis()-start<5000)
-			{
-				if (_cell.available()>0)
-				{
-					char c = _cell.read();
-					data += c;
-				}
-				if (data.indexOf("\nOK")!=-1)
-				{
-					break;
-				}
-			}
-			//Serial.println(data);
-			int sLen = strlen(data.c_str());
-			int i,j;
-			for (i = 0; i <= sLen; i++)
-			{
-				if (data[i] == ':')
-				{
-					break;
-				}
+            while (millis()-start<5000)
+            {
+                if (_cell.available()>0)
+                {
+                    char c = _cell.read();
+                    data += c;
+                }
+                if (data.indexOf("\nOK")!=-1)
+                {
+                    break;
+                }
+            }
+            //Serial.println(data);
+            int sLen = strlen(data.c_str());
+            int i,j;
+            for (i = 0; i <= sLen; i++)
+            {
+                if (data[i] == ':')
+                {
+                    break;
+                }
 
-			}
-			boolean found = false;
-			for (j = 4; j <= i; j++)
-			{
-				if (data[j] == ',')
-				{
-					found = true;
-					break;
-				}
+            }
+            boolean found = false;
+            for (j = 4; j <= i; j++)
+            {
+                if (data[j] == ',')
+                {
+                    found = true;
+                    break;
+                }
 
-			}
-			int iSize;
-			//DBG(data);
-			//DBG("\r\n");
-			if(found ==true)
-			{
-			String _id = data.substring(4, j);
-			chlID = _id.toInt();
-			String _size = data.substring(j+1, i);
-			iSize = _size.toInt();
-			//DBG(_size);
-			String str = data.substring(i+1, i+1+iSize);
-			strcpy(buf, str.c_str());
-			//DBG(str);
+            }
+            int iSize;
+            //DBG(data);
+            //DBG("\r\n");
+            if(found ==true)
+            {
+            String _id = data.substring(4, j);
+            chlID = _id.toInt();
+            String _size = data.substring(j+1, i);
+            iSize = _size.toInt();
+            //DBG(_size);
+            String str = data.substring(i+1, i+1+iSize);
+            strcpy(buf, str.c_str());
+            //DBG(str);
 
-			}
-			else
-			{
-			String _size = data.substring(4, i);
-			iSize = _size.toInt();
-			//DBG(iSize);
-			//DBG("\r\n");
-			String str = data.substring(i+1, i+1+iSize);
-			strcpy(buf, str.c_str());
-			//DBG(str);
-			}
-			return iSize;
-		}
-	}
+            }
+            else
+            {
+            String _size = data.substring(4, i);
+            iSize = _size.toInt();
+            //DBG(iSize);
+            //DBG("\r\n");
+            String str = data.substring(i+1, i+1+iSize);
+            strcpy(buf, str.c_str());
+            //DBG(str);
+            }
+            return iSize;
+        }
+    }
 
-	return 0;
+    return 0;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -275,18 +264,18 @@ boolean WIFI::Reset(void)
 /*************************************************************************
 //inquire the current mode of wifi module
 
-	return:	string of current mode
-		Station
-		AP
-		AP+Station
+    return:    string of current mode
+        Station
+        AP
+        AP+Station
 
 ***************************************************************************/
 String WIFI::showMode()
 {
     String data;
     _cell.println("AT+CWMODE?");
-	unsigned long start;
-	start = millis();
+    unsigned long start;
+    start = millis();
     while (millis()-start<2000) {
      if(_cell.available()>0)
      {
@@ -315,24 +304,24 @@ String WIFI::showMode()
 /*************************************************************************
 //configure the operation mode
 
-	a:
-		1	-	Station
-		2	-	AP
-		3	-	AP+Station
+    a:
+        1    -    Station
+        2    -    AP
+        3    -    AP+Station
 
-	return:
-		true	-	successfully
-		false	-	unsuccessfully
+    return:
+        true    -    successfully
+        false    -    unsuccessfully
 
 ***************************************************************************/
 
-bool WIFI::confMode(byte a)
+boolean WIFI::confMode(byte a)
 {
     String data;
      _cell.print("AT+CWMODE=");
      _cell.println(String(a));
-	 unsigned long start;
-	start = millis();
+     unsigned long start;
+    start = millis();
     while (millis()-start<2000) {
       if(_cell.available()>0)
       {
@@ -343,10 +332,10 @@ bool WIFI::confMode(byte a)
       {
           return true;
       }
-	  if (data.indexOf("ERROR")!=-1 || data.indexOf("busy")!=-1)
-	  {
-		  return false;
-	  }
+      if (data.indexOf("ERROR")!=-1 || data.indexOf("busy")!=-1)
+      {
+          return false;
+      }
 
    }
 }
@@ -355,8 +344,8 @@ bool WIFI::confMode(byte a)
 /*************************************************************************
 //show the list of wifi hotspot
 
-	return:	string of wifi information
-		encryption,SSID,RSSI
+    return:    string of wifi information
+        encryption,SSID,RSSI
 
 
 ***************************************************************************/
@@ -364,12 +353,12 @@ bool WIFI::confMode(byte a)
 String WIFI::showAP(void)
 {
     String data;
-	_cell.flush();
+    _cell.flush();
     _cell.print("AT+CWLAP\r\n");
-	delay(1000);
-	while(1);
+    delay(1000);
+    while(1);
     unsigned long start;
-	start = millis();
+    start = millis();
     while (millis()-start<8000) {
    if(_cell.available()>0)
    {
@@ -392,7 +381,7 @@ String WIFI::showAP(void)
        data.replace("OK","");
        data.replace("+CWLAP","WIFI");
        data.replace(tail,"");
-	   data.replace(head,"");
+       data.replace(head,"");
 
         return data;
         }
@@ -402,18 +391,18 @@ String WIFI::showAP(void)
 /*************************************************************************
 //show the name of current wifi access port
 
-	return:	string of access port name
-		AP:<SSID>
+    return:    string of access port name
+        AP:<SSID>
 
 
 ***************************************************************************/
 String WIFI::showJAP(void)
 {
-	_cell.flush();
+    _cell.flush();
     _cell.println("AT+CWJAP?");
       String data;
-	  unsigned long start;
-	start = millis();
+      unsigned long start;
+    start = millis();
     while (millis()-start<ESP8266_TIMEOUT) {
        if(_cell.available()>0)
        {
@@ -430,7 +419,7 @@ String WIFI::showJAP(void)
       data.replace("AT+CWJAP?","");
       data.replace("+CWJAP","AP");
       data.replace("OK","");
-	  data.replace(tail,"");
+      data.replace(tail,"");
       data.replace(head,"");
 
           return data;
@@ -440,9 +429,9 @@ String WIFI::showJAP(void)
 /*************************************************************************
 //configure the SSID and password of the access port
 
-		return:
-		true	-	successfully
-		false	-	unsuccessfully
+        return:
+        true    -    successfully
+        false    -    unsuccessfully
 
 
 ***************************************************************************/
@@ -462,22 +451,22 @@ boolean WIFI::confJAP(String ssid , String pwd)
 
 
     unsigned long start;
-	start = millis();
+    start = millis();
     while (millis()-start<ESP8266_TIMEOUT) {
         if(_cell.find("OK")==true)
         {
-		   return true;
+           return true;
 
         }
     }
-	return false;
+    return false;
 }
 /*************************************************************************
 //quite the access port
 
-		return:
-			true	-	successfully
-			false	-	unsuccessfully
+        return:
+            true    -    successfully
+            false    -    unsuccessfully
 
 
 ***************************************************************************/
@@ -486,23 +475,23 @@ boolean WIFI::quitAP(void)
 {
     _cell.println("AT+CWQAP");
     unsigned long start;
-	start = millis();
+    start = millis();
     while (millis()-start<ESP8266_TIMEOUT) {
         if(_cell.find("OK")==true)
         {
-		   return true;
+           return true;
 
         }
     }
-	return false;
+    return false;
 
 }
 
 /*************************************************************************
 //show the parameter of ssid, password, channel, encryption in AP mode
 
-		return:
-			mySAP:<SSID>,<password>,<channel>,<encryption>
+        return:
+            mySAP:<SSID>,<password>,<channel>,<encryption>
 
 ***************************************************************************/
 String WIFI::showSAP()
@@ -510,7 +499,7 @@ String WIFI::showSAP()
     _cell.println("AT+CWSAP?");
       String data;
       unsigned long start;
-	start = millis();
+    start = millis();
     while (millis()-start<ESP8266_TIMEOUT) {
        if(_cell.available()>0)
        {
@@ -527,7 +516,7 @@ String WIFI::showSAP()
       data.replace("AT+CWSAP?","");
       data.replace("+CWSAP","mySAP");
       data.replace("OK","");
-	  data.replace(tail,"");
+      data.replace(tail,"");
       data.replace(head,"");
 
           return data;
@@ -536,9 +525,9 @@ String WIFI::showSAP()
 /*************************************************************************
 //configure the parameter of ssid, password, channel, encryption in AP mode
 
-		return:
-			true	-	successfully
-			false	-	unsuccessfully
+        return:
+            true    -    successfully
+            false    -    unsuccessfully
 
 ***************************************************************************/
 
@@ -560,8 +549,8 @@ boolean WIFI::confSAP(String ssid , String pwd , byte chl , byte ecn)
 
     _cell.print(",");
     _cell.println(String(ecn));
-	unsigned long start;
-	start = millis();
+    unsigned long start;
+    start = millis();
     while (millis()-start<ESP8266_TIMEOUT) {
         if(_cell.find("OK")==true )
         {
@@ -569,7 +558,7 @@ boolean WIFI::confSAP(String ssid , String pwd , byte chl , byte ecn)
         }
      }
 
-	 return false;
+     return false;
 
 }
 
@@ -586,11 +575,11 @@ boolean WIFI::confSAP(String ssid , String pwd , byte chl , byte ecn)
 /*************************************************************************
 //inquire the connection status
 
-		return:		string of connection status
-			<ID>  0-4
-			<type>  tcp or udp
-			<addr>  ip
-			<port>  port number
+        return:        string of connection status
+            <ID>  0-4
+            <type>  tcp or udp
+            <addr>  ip
+            <port>  port number
 
 ***************************************************************************/
 
@@ -599,7 +588,7 @@ String WIFI::showStatus(void)
     _cell.println("AT+CIPSTATUS");
       String data;
     unsigned long start;
-	start = millis();
+    start = millis();
     while (millis()-start<ESP8266_TIMEOUT) {
        if(_cell.available()>0)
        {
@@ -616,7 +605,7 @@ String WIFI::showStatus(void)
           char tail[7] = {0x0D,0x0A,0x0D,0x0A};
           data.replace("AT+CIPSTATUS","");
           data.replace("OK","");
-		  data.replace(tail,"");
+          data.replace(tail,"");
           data.replace(head,"");
 
           return data;
@@ -625,9 +614,9 @@ String WIFI::showStatus(void)
 /*************************************************************************
 //show the current connection mode(sigle or multiple)
 
-		return:		string of connection mode
-			0	-	sigle
-			1	-	multiple
+        return:        string of connection mode
+            0    -    sigle
+            1    -    multiple
 
 ***************************************************************************/
 String WIFI::showMux(void)
@@ -636,7 +625,7 @@ String WIFI::showMux(void)
     _cell.println("AT+CIPMUX?");
 
       unsigned long start;
-	start = millis();
+    start = millis();
     while (millis()-start<ESP8266_TIMEOUT) {
        if(_cell.available()>0)
        {
@@ -653,7 +642,7 @@ String WIFI::showMux(void)
           data.replace("AT+CIPMUX?","");
           data.replace("+CIPMUX","showMux");
           data.replace("OK","");
-		  data.replace(tail,"");
+          data.replace(tail,"");
           data.replace(head,"");
 
           return data;
@@ -662,44 +651,44 @@ String WIFI::showMux(void)
 /*************************************************************************
 //configure the current connection mode(sigle or multiple)
 
-		a:		connection mode
-			0	-	sigle
-			1	-	multiple
+        a:        connection mode
+            0    -    sigle
+            1    -    multiple
 
-	return:
-		true	-	successfully
-		false	-	unsuccessfully
+    return:
+        true    -    successfully
+        false    -    unsuccessfully
 ***************************************************************************/
 boolean WIFI::confMux(boolean a)
 {
-	_cell.print("AT+CIPMUX=");
-	_cell.println(a);
-	unsigned long start;
-	start = millis();
-	while (millis()-start<ESP8266_TIMEOUT) {
+    _cell.print("AT+CIPMUX=");
+    _cell.println(a);
+    unsigned long start;
+    start = millis();
+    while (millis()-start<ESP8266_TIMEOUT) {
         if(_cell.find("OK")==true )
         {
            return true;
         }
      }
 
-	 return false;
+     return false;
 }
 
 
 /*************************************************************************
-//Set up tcp or udp connection	(signle connection mode)
+//Set up tcp or udp connection    (signle connection mode)
 
-	type:	tcp or udp
+    type:    tcp or udp
 
-	addr:	ip address
+    addr:    ip address
 
-	port:	port number
+    port:    port number
 
 
-	return:
-		true	-	successfully
-		false	-	unsuccessfully
+    return:
+        true    -    successfully
+        false    -    unsuccessfully
 
 ***************************************************************************/
 boolean WIFI::newMux(byte type, String addr, int port)
@@ -723,8 +712,8 @@ boolean WIFI::newMux(byte type, String addr, int port)
     _cell.println(String(port));
 //    _cell.println("\"");
     unsigned long start;
-	start = millis();
-	while (millis()-start<ESP8266_TIMEOUT) {
+    start = millis();
+    while (millis()-start<ESP8266_TIMEOUT) {
      if(_cell.available()>0)
      {
      char a =_cell.read();
@@ -738,19 +727,19 @@ boolean WIFI::newMux(byte type, String addr, int port)
   return false;
 }
 /*************************************************************************
-//Set up tcp or udp connection	(multiple connection mode)
+//Set up tcp or udp connection    (multiple connection mode)
 
-	type:	tcp or udp
+    type:    tcp or udp
 
-	addr:	ip address
+    addr:    ip address
 
-	port:	port number
+    port:    port number
 
-	id:	id number(0-4)
+    id:    id number(0-4)
 
-	return:
-		true	-	successfully
-		false	-	unsuccessfully
+    return:
+        true    -    successfully
+        false    -    unsuccessfully
 
 ***************************************************************************/
 boolean WIFI::newMux( byte id, byte type, String addr, int port)
@@ -765,7 +754,7 @@ boolean WIFI::newMux( byte id, byte type, String addr, int port)
     {
         _cell.print("\"TCP\"");
     }
-	else
+    else
     {
         _cell.print("\"UDP\"");
     }
@@ -779,8 +768,8 @@ boolean WIFI::newMux( byte id, byte type, String addr, int port)
 //    _cell.println("\"");
     String data;
     unsigned long start;
-	start = millis();
-	while (millis()-start<ESP8266_TIMEOUT) {
+    start = millis();
+    while (millis()-start<ESP8266_TIMEOUT) {
      if(_cell.available()>0)
      {
      char a =_cell.read();
@@ -798,11 +787,11 @@ boolean WIFI::newMux( byte id, byte type, String addr, int port)
 /*************************************************************************
 //send data in sigle connection mode
 
-	str:	string of message
+    str:    string of message
 
-	return:
-		true	-	successfully
-		false	-	unsuccessfully
+    return:
+        true    -    successfully
+        false    -    unsuccessfully
 
 ***************************************************************************/
 boolean WIFI::Send(String str)
@@ -812,27 +801,27 @@ boolean WIFI::Send(String str)
     _cell.println(str.length());
 //    _cell.println("\"");
     unsigned long start;
-	start = millis();
-	bool found;
-	while (millis()-start<5000) {
+    start = millis();
+    bool found;
+    while (millis()-start<5000) {
         if(_cell.find(">")==true )
         {
-			found = true;
+            found = true;
            break;
         }
      }
-	 if(found)
-		_cell.print(str);
-	else
-	{
-		closeMux();
-		return false;
-	}
+     if(found)
+        _cell.print(str);
+    else
+    {
+        closeMux();
+        return false;
+    }
 
 
     String data;
     start = millis();
-	while (millis()-start<5000) {
+    while (millis()-start<5000) {
      if(_cell.available()>0)
      {
      char a =_cell.read();
@@ -849,13 +838,13 @@ boolean WIFI::Send(String str)
 /*************************************************************************
 //send data in multiple connection mode
 
-	id:		<id>(0-4)
+    id:        <id>(0-4)
 
-	str:	string of message
+    str:    string of message
 
-	return:
-		true	-	successfully
-		false	-	unsuccessfully
+    return:
+        true    -    successfully
+        false    -    unsuccessfully
 
 ***************************************************************************/
 boolean WIFI::Send(byte id, String str)
@@ -866,27 +855,27 @@ boolean WIFI::Send(byte id, String str)
     _cell.print(",");
     _cell.println(str.length());
     unsigned long start;
-	start = millis();
-	bool found;
-	while (millis()-start<5000) {
+    start = millis();
+    bool found;
+    while (millis()-start<5000) {
         if(_cell.find(">")==true )
         {
-			found = true;
+            found = true;
            break;
         }
      }
-	 if(found)
-		_cell.print(str);
-	else
-	{
-		closeMux(id);
-		return false;
-	}
+     if(found)
+        _cell.print(str);
+    else
+    {
+        closeMux(id);
+        return false;
+    }
 
 
     String data;
     start = millis();
-	while (millis()-start<5000) {
+    while (millis()-start<5000) {
      if(_cell.available()>0)
      {
      char a =_cell.read();
@@ -901,7 +890,7 @@ boolean WIFI::Send(byte id, String str)
 }
 
 /*************************************************************************
-//Close up tcp or udp connection	(sigle connection mode)
+//Close up tcp or udp connection    (sigle connection mode)
 
 
 ***************************************************************************/
@@ -911,8 +900,8 @@ void WIFI::closeMux(void)
 
     String data;
     unsigned long start;
-	start = millis();
-	while (millis()-start<ESP8266_TIMEOUT) {
+    start = millis();
+    while (millis()-start<ESP8266_TIMEOUT) {
      if(_cell.available()>0)
      {
      char a =_cell.read();
@@ -927,9 +916,9 @@ void WIFI::closeMux(void)
 
 
 /*************************************************************************
-//Set up tcp or udp connection	(multiple connection mode)
+//Set up tcp or udp connection    (multiple connection mode)
 
-	id:	id number(0-4)
+    id:    id number(0-4)
 
 ***************************************************************************/
 void WIFI::closeMux(byte id)
@@ -938,8 +927,8 @@ void WIFI::closeMux(byte id)
     _cell.println(String(id));
     String data;
     unsigned long start;
-	start = millis();
-	while (millis()-start<ESP8266_TIMEOUT) {
+    start = millis();
+    while (millis()-start<ESP8266_TIMEOUT) {
      if(_cell.available()>0)
      {
      char a =_cell.read();
@@ -956,7 +945,7 @@ void WIFI::closeMux(byte id)
 /*************************************************************************
 //show the current ip address
 
-	return:	string of ip address
+    return:    string of ip address
 
 ***************************************************************************/
 String WIFI::showIP(void)
@@ -964,11 +953,11 @@ String WIFI::showIP(void)
     String data;
     unsigned long start;
     //DBG("AT+CIFSR\r\n");
-	for(int a=0; a<3;a++)
-	{
-	_cell.println("AT+CIFSR");
-	start = millis();
-	while (millis()-start<ESP8266_TIMEOUT) {
+    for(int a=0; a<3;a++)
+    {
+    _cell.println("AT+CIFSR");
+    start = millis();
+    while (millis()-start<ESP8266_TIMEOUT) {
      while(_cell.available()>0)
      {
      char a =_cell.read();
@@ -978,15 +967,15 @@ String WIFI::showIP(void)
      {
          break;
      }
-	}
-	if(data.indexOf(".") != -1)
-	{
-		break;
-	}
-	data = "";
+    }
+    if(data.indexOf(".") != -1)
+    {
+        break;
+    }
+    data = "";
   }
-	//DBG(data);
-	//DBG("\r\n");
+    //DBG(data);
+    //DBG("\r\n");
     char head[4] = {0x0D,0x0A};
     char tail[7] = {0x0D,0x0D,0x0A};
     data.replace("AT+CIFSR","");
@@ -999,15 +988,15 @@ String WIFI::showIP(void)
 /*************************************************************************
 ////set the parameter of server
 
-	mode:
-		0	-	close server mode
-		1	-	open server mode
+    mode:
+        0    -    close server mode
+        1    -    open server mode
 
-	port:	<port>
+    port:    <port>
 
-	return:
-		true	-	successfully
-		false	-	unsuccessfully
+    return:
+        true    -    successfully
+        false    -    unsuccessfully
 
 ***************************************************************************/
 
@@ -1020,9 +1009,9 @@ boolean WIFI::confServer(byte mode, int port)
 
     String data;
     unsigned long start;
-	start = millis();
-	boolean found = false;
-	while (millis()-start<ESP8266_TIMEOUT) {
+    start = millis();
+    boolean found = false;
+    while (millis()-start<ESP8266_TIMEOUT) {
      if(_cell.available()>0)
      {
      char a =_cell.read();
@@ -1030,7 +1019,7 @@ boolean WIFI::confServer(byte mode, int port)
      }
      if (data.indexOf("OK")!=-1 || data.indexOf("no charge")!=-1)
      {
-		found = true;
+        found = true;
          break;
      }
   }

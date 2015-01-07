@@ -57,6 +57,10 @@
     Arduino Nano w/ ATmega328:  30720 Bytes
 */
 
+/**** Debug Settings *********************************************************/
+//#define ESP8266_DEBUG
+/**** End of Debug Settings **************************************************/
+
 /**** Chip Usage **************************************************************
     Comment out the define if the chip is not used.
 */

@@ -15,37 +15,44 @@ V1.0	released the first version of ESP8266 library
 #ifndef __UARTWIFI_H__
 #define __UARTWIFI_H__
 #include <Arduino.h>
-//#include "NilRTOS.h"
-#include <SoftwareSerial.h>
 
-#define _DBG_RXPIN_ 10
-#define _DBG_TXPIN_ 11
+#ifdef ESP8266_DEBUG
+    #include <SoftwareSerial.h>
+    #define _DBG_RXPIN_ 10
+    #define _DBG_TXPIN_ 11
+    #define debugBaudRate 9600
+    #define ESP8266_BAUDRATE 9600   // due to SoftwareSerial, try to run at a lower rate
+#else
+    #define ESP8266_BAUDRATE 115200 //The default baud rate of ESP8266 is 115200
+#endif
 
-#define debugBaudRate 9600
 #define ESP8266_TIMEOUT 3000    // 3 seconds
 
 
 #define UNO			//uncomment this line when you use it with UNO board
 //#define MEGA		//uncomment this line when you use it with MEGA board
 
-
-#define DEBUG
+// TODO: this should be defined outside of this module
+//#define ESP8266_DEBUG
 
 
 #ifdef UNO
-    #define _cell mySerial
-    #define DebugSerial Serial
+    #ifdef ESP8266_DEBUG
+        // when debugging, connect to ESP8266 using SoftSerial
+        #define _cell softSerial
+        #define DebugSerial Serial
+        extern SoftwareSerial softSerial;
+    #else
+        #define _cell Serial
+    #endif
 #endif
 
 #ifdef MEGA
     #define _cell Serial1
-    #define DebugSerial Serial
+    #ifdef ESP8266_DEBUG
+        #define DebugSerial Serial
+    #endif
 #endif
-
-#ifdef UNO
-    extern SoftwareSerial mySerial;
-#endif
-
 
 //The way of encrypstion
 #define    OPEN          0
@@ -71,10 +78,6 @@ V1.0	released the first version of ESP8266 library
 #define SERIAL_TX_BUFFER_SIZE 128
 #define SERIAL_RX_BUFFER_SIZE 128
 
-
-
-
-
 class WIFI
 {
 public:
@@ -82,7 +85,7 @@ public:
     void begin(void);
 
     //Initialize port
-    bool Initialize(byte mode, String ssid, String pwd, byte chl = 1, byte ecn = 2);
+    boolean Initialize(byte mode, String ssid, String pwd, byte chl = 1, byte ecn = 2);
     boolean ipConfig(byte type, String addr, int port, boolean a = 0, byte id = 0);
 
     boolean Send(String str);  //send data in sigle connection mode
@@ -93,7 +96,7 @@ public:
     //String begin(void);
     /*=================WIFI Function Command=================*/
     boolean Reset(void);    //reset the module
-    bool confMode(byte a);   //set the working mode of module
+    boolean confMode(byte a);   //set the working mode of module
     boolean confJAP(String ssid , String pwd);    //set the name and password of wifi
     boolean confSAP(String ssid , String pwd , byte chl , byte ecn);       //set the parametter of SSID, password, channel, encryption in AP mode.
 
