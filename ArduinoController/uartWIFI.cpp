@@ -83,7 +83,7 @@ boolean WIFI::Initialize(byte mode, String ssid, String pwd, byte chl, byte ecn)
 /*************************************************************************
 Set up TCP or UDP connection
 
-    type:    tcp or udp
+    type:    TCP or UDP
 
     addr:    ip address
 
@@ -136,7 +136,7 @@ boolean WIFI::ipConfig(byte type, String addr, int port, boolean a, byte id)
 }
 
 /*************************************************************************
-//receive message from wifi
+Receive message from wifi
 
     buf:    buffer for receiving data
 
@@ -229,7 +229,7 @@ int WIFI::ReceiveMessage(char *buf)
 
 
 /*************************************************************************
-//reboot the wifi module
+Reboot the wifi module
 
 
 
@@ -262,7 +262,7 @@ boolean WIFI::Reset(void)
  */
 
 /*************************************************************************
-//inquire the current mode of wifi module
+Inquire the current mode of wifi module
 
     return:    string of current mode
         Station
@@ -302,7 +302,7 @@ String WIFI::showMode()
 
 
 /*************************************************************************
-//configure the operation mode
+Configure the operation mode
 
     a:
         1    -    Station
@@ -342,9 +342,9 @@ boolean WIFI::confMode(byte a)
 
 
 /*************************************************************************
-//show the list of wifi hotspot
+Show the list of wifi hotspot
 
-    return:    string of wifi information
+    return: string of wifi information
         encryption,SSID,RSSI
 
 
@@ -389,10 +389,10 @@ String WIFI::showAP(void)
 
 
 /*************************************************************************
-//show the name of current wifi access port
+Show the name of current wifi access port
 
-    return:    string of access port name
-        AP:<SSID>
+    return: string of access port name
+        AP: <SSID>
 
 
 ***************************************************************************/
@@ -427,11 +427,11 @@ String WIFI::showJAP(void)
 
 
 /*************************************************************************
-//configure the SSID and password of the access port
+Configure the SSID and password of the access port
 
-        return:
-        true    -    successfully
-        false    -    unsuccessfully
+    return:
+    true    -    successfully
+    false   -    unsuccessfully
 
 
 ***************************************************************************/
@@ -488,7 +488,7 @@ boolean WIFI::quitAP(void)
 }
 
 /*************************************************************************
-//show the parameter of ssid, password, channel, encryption in AP mode
+Show the parameter of SSID, password, channel, encryption in AP mode
 
         return:
             mySAP:<SSID>,<password>,<channel>,<encryption>
@@ -523,7 +523,7 @@ String WIFI::showSAP()
 }
 
 /*************************************************************************
-//configure the parameter of ssid, password, channel, encryption in AP mode
+Configure the parameter of SSID, password, channel, encryption in AP mode
 
         return:
             true    -    successfully
@@ -534,7 +534,7 @@ String WIFI::showSAP()
 boolean WIFI::confSAP(String ssid , String pwd , byte chl , byte ecn)
 {
     _cell.print("AT+CWSAP=");
-    _cell.print("\"");     //"ssid"
+    _cell.print("\"");     //"SSID"
     _cell.print(ssid);
     _cell.print("\"");
 
@@ -573,13 +573,13 @@ boolean WIFI::confSAP(String ssid , String pwd , byte chl , byte ecn)
  */
 
 /*************************************************************************
-//inquire the connection status
+Inquire connection status
 
-        return:        string of connection status
-            <ID>  0-4
-            <type>  tcp or udp
-            <addr>  ip
-            <port>  port number
+    return: string of connection status
+        <ID>  0-4
+        <type>  TCP or UDP
+        <addr>  IP
+        <port>  port number
 
 ***************************************************************************/
 
@@ -612,11 +612,11 @@ String WIFI::showStatus(void)
 }
 
 /*************************************************************************
-//show the current connection mode(sigle or multiple)
+Show the current connection mode (single or multiple)
 
-        return:        string of connection mode
-            0    -    sigle
-            1    -    multiple
+    return: string of connection mode
+        0    -    single
+        1    -    multiple
 
 ***************************************************************************/
 String WIFI::showMux(void)
@@ -649,11 +649,11 @@ String WIFI::showMux(void)
 }
 
 /*************************************************************************
-//configure the current connection mode(sigle or multiple)
+Configure connection mode (single or multiple)
 
-        a:        connection mode
-            0    -    sigle
-            1    -    multiple
+    a:        connection mode
+        0    -    single
+        1    -    multiple
 
     return:
         true    -    successfully
@@ -677,18 +677,18 @@ boolean WIFI::confMux(boolean a)
 
 
 /*************************************************************************
-//Set up tcp or udp connection    (signle connection mode)
+Set up TCP or UDP connection for single connection mode.
 
-    type:    tcp or udp
+    type:    TCP or UDP
 
-    addr:    ip address
+    addr:    IP address
 
     port:    port number
 
 
     return:
         true    -    successfully
-        false    -    unsuccessfully
+        false   -    unsuccessfully
 
 ***************************************************************************/
 boolean WIFI::newMux(byte type, String addr, int port)
@@ -727,11 +727,11 @@ boolean WIFI::newMux(byte type, String addr, int port)
   return false;
 }
 /*************************************************************************
-//Set up tcp or udp connection    (multiple connection mode)
+Set up TCP or UDP connection    (multiple connection mode)
 
-    type:    tcp or udp
+    type:    TCP or UDP
 
-    addr:    ip address
+    addr:    IP address
 
     port:    port number
 
@@ -743,7 +743,6 @@ boolean WIFI::newMux(byte type, String addr, int port)
 
 ***************************************************************************/
 boolean WIFI::newMux( byte id, byte type, String addr, int port)
-
 {
 
     _cell.print("AT+CIPSTART=");
@@ -785,13 +784,13 @@ boolean WIFI::newMux( byte id, byte type, String addr, int port)
 
 }
 /*************************************************************************
-//send data in sigle connection mode
+Send data in single connection mode
 
     str:    string of message
 
     return:
         true    -    successfully
-        false    -    unsuccessfully
+        false   -    unsuccessfully
 
 ***************************************************************************/
 boolean WIFI::Send(String str)
@@ -836,15 +835,15 @@ boolean WIFI::Send(String str)
 }
 
 /*************************************************************************
-//send data in multiple connection mode
+Send data in multiple connection mode
 
-    id:        <id>(0-4)
+    id:     <id>(0-4)
 
     str:    string of message
 
     return:
         true    -    successfully
-        false    -    unsuccessfully
+        false   -    unsuccessfully
 
 ***************************************************************************/
 boolean WIFI::Send(byte id, String str)
@@ -890,9 +889,7 @@ boolean WIFI::Send(byte id, String str)
 }
 
 /*************************************************************************
-//Close up tcp or udp connection    (sigle connection mode)
-
-
+Close up TCP or UDP connection for single connection mode.
 ***************************************************************************/
 void WIFI::closeMux(void)
 {
@@ -916,10 +913,9 @@ void WIFI::closeMux(void)
 
 
 /*************************************************************************
-//Set up tcp or udp connection    (multiple connection mode)
+Set up TCP or UDP connection for multiple connection mode.
 
-    id:    id number(0-4)
-
+    id: connection ID number(0-4)
 ***************************************************************************/
 void WIFI::closeMux(byte id)
 {
@@ -943,9 +939,9 @@ void WIFI::closeMux(byte id)
 }
 
 /*************************************************************************
-//show the current ip address
+Show current IP address
 
-    return:    string of ip address
+    return: IP address as a String
 
 ***************************************************************************/
 String WIFI::showIP(void)
@@ -986,7 +982,7 @@ String WIFI::showIP(void)
 }
 
 /*************************************************************************
-////set the parameter of server
+Set server parameters
 
     mode:
         0    -    close server mode
@@ -996,10 +992,9 @@ String WIFI::showIP(void)
 
     return:
         true    -    successfully
-        false    -    unsuccessfully
+        false   -    unsuccessfully
 
 ***************************************************************************/
-
 boolean WIFI::confServer(byte mode, int port)
 {
     _cell.print("AT+CIPSERVER=");
