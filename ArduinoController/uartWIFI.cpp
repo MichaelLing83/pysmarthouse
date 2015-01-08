@@ -1,18 +1,18 @@
 #include "uartWIFI.h"
 
+#ifdef ESP8266_DEBUG
+    #define DBG(message)    Serial.println(message)
+    #define DBGW(message)   Serial.write(message)
+#else
+    #define DBG(message)
+    #define DBGW(message)
+#endif
+
 #ifdef UNO
     #ifdef ESP8266_DEBUG
         SoftwareSerial softSerial(_DBG_RXPIN_, _DBG_TXPIN_);
     #endif
 #endif
-
-#ifdef DEBUG
-    #define DBG(message)    DebugSerial.println(message)
-    #define DBGW(message)   DebugSerial.write(message)
-#else
-    #define DBG(message)
-    #define DBGW(message)
-#endif // DEBUG
 
 int chlID;  //client id(0-4)
 
@@ -245,10 +245,10 @@ boolean WIFI::Reset(void)
         if(_cell.find("ready")==true)
         {
             reset_ok = true;
-            DBG("Reset done: OK.");
             break;
         }
     }
+    DBG(String("Reset done with ") + reset_ok);
     return reset_ok;
 }
 
@@ -304,40 +304,37 @@ String WIFI::showMode()
 /*************************************************************************
 Configure the operation mode
 
-    a:
+    mode:
         1    -    Station
         2    -    AP
         3    -    AP+Station
 
     return:
         true    -    successfully
-        false    -    unsuccessfully
+        false   -    unsuccessfully
 
 ***************************************************************************/
 
-boolean WIFI::confMode(byte a)
+boolean WIFI::confMode(byte mode)
 {
     String data;
-     _cell.print("AT+CWMODE=");
-     _cell.println(String(a));
-     unsigned long start;
-    start = millis();
-    while (millis()-start<2000) {
-      if(_cell.available()>0)
-      {
-      char a =_cell.read();
-      data=data+a;
-      }
-      if (data.indexOf("OK")!=-1 || data.indexOf("no change")!=-1)
-      {
-          return true;
-      }
-      if (data.indexOf("ERROR")!=-1 || data.indexOf("busy")!=-1)
-      {
-          return false;
-      }
-
-   }
+    _cell.print("AT+CWMODE=");
+    _cell.println(mode);
+    DBG(String("AT+CWMODE=") + mode);
+    unsigned long start = millis();
+    while (millis()-start < ESP8266_TIMEOUT) {
+        if (_cell.available()) { // same logic as "if (_cell.available() > 0)", but saves two bytes
+            data += _cell.read(); // saves 76 bytes compared to "data = data + _cell.read()"
+        }
+        if (data.indexOf("OK") != -1 || data.indexOf("no change") != -1) {
+            DBG("OK or no change");
+            return true;
+        }
+        if (data.indexOf("ERROR") != -1 || data.indexOf("busy") != -1) {
+            DBG("ERROR or busy");
+            return false;
+        }
+    }
 }
 
 

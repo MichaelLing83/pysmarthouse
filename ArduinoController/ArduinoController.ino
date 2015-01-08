@@ -58,7 +58,6 @@
 */
 
 /**** Debug Settings *********************************************************/
-//#define ESP8266_DEBUG
 /**** End of Debug Settings **************************************************/
 
 /**** Chip Usage **************************************************************
@@ -103,7 +102,9 @@
 
 /**** ESP8266 Configurations *************************************************/
 #include "uartWIFI.h"
-#include <SoftwareSerial.h>
+#ifdef ESP8266_DEBUG
+    #include <SoftwareSerial.h>
+#endif
 #include "Cmd.h"
 #define SSID       "michael"
 #define PASSWORD   "waterpigs"

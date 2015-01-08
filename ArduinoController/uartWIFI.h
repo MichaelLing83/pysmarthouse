@@ -16,6 +16,10 @@ V1.0	released the first version of ESP8266 library
 #define __UARTWIFI_H__
 #include <Arduino.h>
 
+#define UNO //uncomment this line when you use it with UNO board
+//#define MEGA  //uncomment this line when you use it with MEGA board
+#define ESP8266_DEBUG
+
 #ifdef ESP8266_DEBUG
     #include <SoftwareSerial.h>
     #define _DBG_RXPIN_ 10
@@ -28,20 +32,11 @@ V1.0	released the first version of ESP8266 library
 
 #define ESP8266_TIMEOUT 3000    // 3 seconds
 
-
-#define UNO			//uncomment this line when you use it with UNO board
-//#define MEGA		//uncomment this line when you use it with MEGA board
-
-// TODO: this should be defined outside of this module
-//#define ESP8266_DEBUG
-
-
 #ifdef UNO
     #ifdef ESP8266_DEBUG
         // when debugging, connect to ESP8266 using SoftSerial
         #define _cell softSerial
         #define DebugSerial Serial
-        extern SoftwareSerial softSerial;
     #else
         #define _cell Serial
     #endif
@@ -96,7 +91,7 @@ public:
     //String begin(void);
     /*=================WIFI Function Command=================*/
     boolean Reset(void);    //reset the module
-    boolean confMode(byte a);   //set the working mode of module
+    boolean confMode(byte mode);   //set the working mode of module
     boolean confJAP(String ssid , String pwd);    //set the name and password of wifi
     boolean confSAP(String ssid , String pwd , byte chl , byte ecn);       //set the parametter of SSID, password, channel, encryption in AP mode.
 
