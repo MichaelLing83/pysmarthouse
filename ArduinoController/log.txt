@@ -1,0 +1,384 @@
+﻿
+AT+RST
+1
+WIFI::begin() ends
+WIFI::Initialize starts
+WIFI::confMode starts
+AT+CWMODE=1
+OK or no change
+
+AT+CWMODE=1
+
+no change
+WIFI::confMode ends
+1
+AT+RST
+1
+WIFI::confJAP starts
+AT+CWJAP="michael","waterpigs"
+WIFI::confJAP ends
+0
+WIFI::ipConfig starts
+AT+CIPMUX=0
+WIFI::ipConfig
+1
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
++IPD,6:CMD;21
+OK
+
+
+No head
+
+
+No head
+
+
++IPD,6:CMD;24
+OK
+
+
+No head
+
+
++IPD,6:CMD;26
+OK
+
+
+No head
+
+
++IPD,6:CMD;28
+OK
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
++IPD,6:CMD;34
+OK
+
+
++IPD,6:CMD;35
+OK
+
+
+No head
+
+
+No head
+
+
++IPD,6:CMD;38
+OK
+
+
+No head
+
+
+No head
+
+
++IPD,6:CMD;40
+OK
+
+
+No head
+
+
+No head
+
+
++IPD,6:CMD;42
+OK
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
++IPD,6:CMD;47
+OK
+
+
+No head
+
+
++IPD,6:CMD;49
+OK
+
+
++IPD,6:CMD;50
+OK
+
+
++IPD,6:CMD;51
+OK
+
+
++IPD,6:CMD;52
+OK
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
++IPD,6:CMD;61
+OK
+
+
++IPD,6:CMD;62
+OK
+
+
++IPD,6:CMD;63
+OK
+
+
+No head
+
+
+No head
+
+
++IPD,6:CMD;65
+OK
+
+
+No head
+
+
+No head
+
+
+No head
+
+
++IPD,6:CMD;69
+OK
+
+
+No head
+
+
+No head
+
+
++IPD,6:CMD;72
+OK
+
+
+No head
+
+
+No head
+
+
++IPD,6:CMD;75
+OK
+
+
++IPD,6:CMD;76
+OK
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
++IPD,6:CMD;89
+OK
+
+
+No head
+
+
++IPD,6:CMD;91
+OK
+
+
+No head
+
+
++IPD,6:CMD;93
+OK
+
+
+No head
+
+
+No head
+
+
+No head
+
+
++IPD,6:CMD;97
+OK
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
++IPD,7:CMD;101
+OK
+
+
+No head
+
+
++IPD,7:CMD;103
+OK
+
+
+No head
+
+
++IPD,7:CMD;105
+OK
+
+
++IPD,7:CMD;106
+OK
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head
+
+
+No head

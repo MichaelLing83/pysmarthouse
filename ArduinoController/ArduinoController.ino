@@ -192,7 +192,7 @@ void loop() {
             report += ";";
         #endif
         wifi.Send(report);
-        delay(2000);    // do we need to be sure sending is finished?
+        //delay(2000);    // do we need to be sure sending is finished?
 
         // receive response (cmd) from server
         int data_len = wifi.ReceiveMessage(wifiBuffer);

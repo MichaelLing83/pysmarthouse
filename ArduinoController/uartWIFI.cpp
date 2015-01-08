@@ -24,6 +24,7 @@ int chlID;  //client id(0-4)
 
 void WIFI::begin(void)
 {
+    DBG("WIFI::begin() starts");
     _cell.begin(ESP8266_BAUDRATE);
     #ifdef ESP8266_DEBUG
         DebugSerial.begin(debugBaudRate);   //The default baud rate for debugging is 9600
@@ -31,6 +32,7 @@ void WIFI::begin(void)
     _cell.flush();
     _cell.setTimeout(ESP8266_TIMEOUT);
     Reset();    // TODO: at other places, Reset results are not checked, is it a problem that Reset fails?
+    DBG("WIFI::begin() ends");
 }
 
 
@@ -58,6 +60,7 @@ Initialize port
 ***************************************************************************/
 boolean WIFI::Initialize(byte mode, String ssid, String pwd, byte chl, byte ecn)
 {
+    DBG("WIFI::Initialize starts");
     boolean result = false;
     if (mode == STA || mode == AP || mode == AP_STA) {
         result = confMode(mode);
@@ -78,6 +81,7 @@ boolean WIFI::Initialize(byte mode, String ssid, String pwd, byte chl, byte ecn)
         }
     }
     return result;
+    DBG("WIFI::Initialize ends");
 }
 
 /*************************************************************************
@@ -102,6 +106,7 @@ Set up TCP or UDP connection
 ***************************************************************************/
 boolean WIFI::ipConfig(byte type, String addr, int port, boolean useMultiConn, byte id)
 {
+    DBG("WIFI::ipConfig starts");
     boolean result = false;
     confMux(useMultiConn);
     delay(ESP8266_TIMEOUT); // TODO: is this necessary?
@@ -110,6 +115,8 @@ boolean WIFI::ipConfig(byte type, String addr, int port, boolean useMultiConn, b
     } else {
         result = newMux(id, type, addr, port);
     }
+    DBG("WIFI::ipConfig");
+    DBG(result);
     return result;
 }
 
@@ -137,7 +144,7 @@ int WIFI::ReceiveMessage(char *buf)
     // read in all data, which ends with "\nOK".
      while (millis()-start < ESP8266_TIMEOUT) {
         if (_cell.available()) {
-            data += _cell.read();
+            data += (char) _cell.read();
         }
         if (data.indexOf("\nOK") != -1) {
             break;
@@ -233,7 +240,7 @@ String WIFI::showMode()
     unsigned long start = millis();
     while (millis()-start < ESP8266_TIMEOUT) {
         if(_cell.available()) {
-            data += _cell.read();
+            data += (char) _cell.read();
         }
         if (data.indexOf("OK") != -1) {
             break;
@@ -268,6 +275,7 @@ Configure the operation mode
 ***************************************************************************/
 boolean WIFI::confMode(byte mode)
 {
+    DBG("WIFI::confMode starts");
     String data;
     boolean result;
     String cmd = "AT+CWMODE=";
@@ -276,8 +284,8 @@ boolean WIFI::confMode(byte mode)
     DBG(cmd);
     unsigned long start = millis();
     while (millis()-start < ESP8266_TIMEOUT) {
-        if (_cell.available()) { // same logic as "if (_cell.available() > 0)", but saves two bytes
-            data += _cell.read(); // saves 76 bytes compared to "data = data + _cell.read()"
+        if (_cell.available()) {
+            data += (char) _cell.read();
         }
         if (data.indexOf("OK") != -1 || data.indexOf("no change") != -1) {
             DBG("OK or no change");
@@ -290,6 +298,8 @@ boolean WIFI::confMode(byte mode)
         }
     }
     DBG(data);
+    DBG("WIFI::confMode ends");
+    DBG(result);
     return result;
 }
 
@@ -311,7 +321,7 @@ String WIFI::showAP(void)
     unsigned long start = millis();
     while (millis()-start < ESP8266_TIMEOUT) {
         if(_cell.available()) {
-            data += _cell.read();
+            data += (char) _cell.read();
         }
         if (data.indexOf("OK") != -1 || data.indexOf("ERROR") != -1 ) {
             break;
@@ -350,7 +360,7 @@ String WIFI::showJAP(void)
     unsigned long start = millis();
     while (millis()-start < ESP8266_TIMEOUT) {
         if(_cell.available()) {
-            data += _cell.read();
+            data += (char) _cell.read();
         }
         if (data.indexOf("OK") != -1 || data.indexOf("ERROR") != -1 ) {
             break;
@@ -380,8 +390,10 @@ Configure the SSID and password of the access port
 ***************************************************************************/
 boolean WIFI::confJAP(String ssid, String pwd)
 {
+    DBG("WIFI::confJAP starts");
+    boolean result = false;
     String cmd = "AT+CWJAP=\"";
-    cmd += cmd;
+    cmd += ssid;
     cmd += "\",\"";
     cmd += pwd;
     cmd += "\"";
@@ -390,10 +402,13 @@ boolean WIFI::confJAP(String ssid, String pwd)
     unsigned long start = millis();
     while (millis()-start < ESP8266_TIMEOUT) {
         if(_cell.find("OK")) {
-            return true;
+            result = true;
+            break;
         }
     }
-    return false;
+    DBG("WIFI::confJAP ends");
+    DBG(result);
+    return result;
 }
 /*************************************************************************
 Quite the access port
@@ -431,7 +446,7 @@ String WIFI::showSAP()
     unsigned long start = millis();
     while (millis()-start < ESP8266_TIMEOUT) {
         if(_cell.available()) {
-            data += _cell.read();
+            data += (char) _cell.read();
         }
         if (data.indexOf("OK") != -1 || data.indexOf("ERROR") != -1 ) {
             break;
@@ -511,7 +526,7 @@ String WIFI::showStatus(void)
     unsigned long start = millis();
     while (millis()-start < ESP8266_TIMEOUT) {
         if(_cell.available()) {
-            data += _cell.read();
+            data += (char) _cell.read();
         }
         if (data.indexOf("OK") != -1) {
             break;
@@ -544,7 +559,7 @@ String WIFI::showMux(void)
     unsigned long start  = millis();
     while (millis()-start < ESP8266_TIMEOUT) {
         if(_cell.available()) {
-            data += _cell.read();
+            data += (char) _cell.read();
         }
         if (data.indexOf("OK") != -1) {
             break;
@@ -628,7 +643,7 @@ boolean WIFI::newMux(byte type, String addr, int port)
     while (millis()-start<ESP8266_TIMEOUT) {
      if(_cell.available()>0)
      {
-     char a =_cell.read();
+     char a = (char) _cell.read();
      data=data+a;
      }
      if (data.indexOf("OK")!=-1 || data.indexOf("ALREAY CONNECT")!=-1 || data.indexOf("ERROR")!=-1)
@@ -683,7 +698,7 @@ boolean WIFI::newMux(byte id, byte type, String addr, int port)
     while (millis()-start<ESP8266_TIMEOUT) {
      if(_cell.available()>0)
      {
-     char a =_cell.read();
+     char a = (char) _cell.read();
      data=data+a;
      }
      if (data.indexOf("OK")!=-1 || data.indexOf("ALREAY CONNECT")!=-1 )
@@ -735,7 +750,7 @@ boolean WIFI::Send(String str)
     while (millis()-start<5000) {
      if(_cell.available()>0)
      {
-     char a =_cell.read();
+     char a = (char) _cell.read();
      data=data+a;
      }
      if (data.indexOf("SEND OK")!=-1)
@@ -789,7 +804,7 @@ boolean WIFI::Send(byte id, String str)
     while (millis()-start<5000) {
      if(_cell.available()>0)
      {
-     char a =_cell.read();
+     char a = (char) _cell.read();
      data=data+a;
      }
      if (data.indexOf("SEND OK")!=-1)
@@ -813,7 +828,7 @@ void WIFI::closeMux(void)
     while (millis()-start<ESP8266_TIMEOUT) {
      if(_cell.available()>0)
      {
-     char a =_cell.read();
+     char a = (char) _cell.read();
      data=data+a;
      }
      if (data.indexOf("Linked")!=-1 || data.indexOf("ERROR")!=-1 || data.indexOf("we must restart")!=-1)
@@ -839,7 +854,7 @@ void WIFI::closeMux(byte id)
     while (millis()-start<ESP8266_TIMEOUT) {
      if(_cell.available()>0)
      {
-     char a =_cell.read();
+     char a = (char) _cell.read();
      data=data+a;
      }
      if (data.indexOf("OK")!=-1 || data.indexOf("Link is not")!=-1 || data.indexOf("Cant close")!=-1)
@@ -864,7 +879,7 @@ String WIFI::showIP(void)
     start = millis();
     while (millis()-start < ESP8266_TIMEOUT) {
         while(_cell.available()) {
-            data += _cell.read();
+            data += (char) _cell.read();
         }
         if (data.indexOf("AT+CIFSR") != -1) {
             break;
@@ -908,7 +923,7 @@ boolean WIFI::confServer(byte mode, int port)
     unsigned long start = millis();
     while (millis()-start < ESP8266_TIMEOUT) {
         if(_cell.available()) {
-            data += _cell.read();
+            data += (char) _cell.read();
         }
         if (data.indexOf("OK") != -1 || data.indexOf("no charge") != -1) {
             result = true;

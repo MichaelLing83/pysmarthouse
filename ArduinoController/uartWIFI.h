@@ -30,7 +30,7 @@ V1.0	released the first version of ESP8266 library
     #define ESP8266_BAUDRATE 115200 //The default baud rate of ESP8266 is 115200
 #endif
 
-#define ESP8266_TIMEOUT 3000    // 3 seconds
+#define ESP8266_TIMEOUT 4000    // 4 seconds
 
 #ifdef UNO
     #ifdef ESP8266_DEBUG

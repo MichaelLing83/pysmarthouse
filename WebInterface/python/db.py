@@ -12,7 +12,7 @@ import os.path
 import logging
 
 PATH_TO_DB = "/home/pi/git/pysmarthouse/WebInterface/data/pysmarthouse.db"
-ALL_IDS = ("KitchenWindow", "FrontYard", "SunRoom", "GuestTiolet", "MainToilet", "Bedroom_1", "Bedroom_2", "Bedroom_3")
+ALL_IDS = ("KitchenWindow", "FrontDoorStep", "SunRoom", "GuestTiolet", "MainToilet", "Bedroom_1", "Bedroom_2", "Bedroom_3")
 ALL_TYPES = ("Temperature", "Relay")
 
 class PSMError(Exception):
