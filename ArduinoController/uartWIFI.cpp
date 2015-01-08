@@ -1,3 +1,9 @@
+/*
+TODO: Find a good way to wait for ESP8266_TIMEOUT. In current solution, if we are unlucky and there is a wrap-around of timer, the we could
+    wait forever.
+TODO: Find if head and tail pattern are universal, so we could handle them at one place.
+*/
+
 #include "uartWIFI.h"
 
 #ifdef ESP8266_DEBUG
@@ -59,18 +65,12 @@ boolean WIFI::Initialize(byte mode, String ssid, String pwd, byte chl, byte ecn)
         // TODO: if confMode fails, does it make sense to continue with confJAP and confSAP?
         switch (mode) {
             case STA:
-                /* result = confMode(mode);
-                Reset(); */
                 confJAP(ssid, pwd);
                 break;
             case AP:
-                /* result = confMode(mode);
-                Reset(); */
                 confSAP(ssid, pwd, chl, ecn);
                 break;
             case AP_STA:
-                /* result = confMode(mode);
-                Reset(); */
                 confJAP(ssid, pwd);
                 confSAP(ssid, pwd, chl, ecn);
                 break;
@@ -103,32 +103,11 @@ Set up TCP or UDP connection
 boolean WIFI::ipConfig(byte type, String addr, int port, boolean useMultiConn, byte id)
 {
     boolean result = false;
+    confMux(useMultiConn);
+    delay(ESP8266_TIMEOUT); // TODO: is this necessary?
     if (!useMultiConn) {    // use single connection mode
-        confMux(useMultiConn);
-
-        long timeStart = millis();
-        while (1)
-        {
-            long time0 = millis();
-            if (time0 - timeStart > ESP8266_TIMEOUT)
-            {
-                break;
-            }
-        }
         result = newMux(type, addr, port);
-    }
-    else if (useMultiConn == 1)
-    {
-        confMux(useMultiConn);
-        long timeStart = millis();
-        while (1)
-        {
-            long time0 = millis();
-            if (time0 - timeStart > ESP8266_TIMEOUT)
-            {
-                break;
-            }
-        }
+    } else {
         result = newMux(id, type, addr, port);
     }
     return result;
@@ -143,7 +122,9 @@ Receive message from wifi
 
     return:    size of the buffer
 
-
+TODO: this method should take parameter like (unsigned char* buf, unsigned int max_length) so we could check the received data length does
+    not exceeds the buffer length.
+TOCO: define a new struct as return type, which consists of iSize and chlID (which could be -1 to mark chlID doesn't exist).
 ***************************************************************************/
 int WIFI::ReceiveMessage(char *buf)
 {
@@ -165,7 +146,7 @@ int WIFI::ReceiveMessage(char *buf)
     DBG(data);
 
     // post processing
-    // it can be in form: +IPD,len:data or +IPD,id,len:data
+    // it can be in form "+IPD,len:data" or "+IPD,id,len:data"
     int head_start, head_end, id_start, len_start, data_start;
     String id, len;
     String head;
@@ -182,7 +163,7 @@ int WIFI::ReceiveMessage(char *buf)
         DBG("No id or len");
         return 0;
     } else if (id_start != len_start) {
-        // it's "+IPD,id,len:"
+        // it's "+IPD,id,len"
         id = head.substring(id_start, len_start-1);
         DBG(id);
         chlID = id.toInt();
@@ -624,7 +605,6 @@ Set up TCP or UDP connection for single connection mode.
 
 ***************************************************************************/
 boolean WIFI::newMux(byte type, String addr, int port)
-
 {
     String data;
     _cell.print("AT+CIPSTART=");
@@ -674,7 +654,7 @@ Set up TCP or UDP connection    (multiple connection mode)
         false    -    unsuccessfully
 
 ***************************************************************************/
-boolean WIFI::newMux( byte id, byte type, String addr, int port)
+boolean WIFI::newMux(byte id, byte type, String addr, int port)
 {
 
     _cell.print("AT+CIPSTART=");
@@ -880,36 +860,23 @@ String WIFI::showIP(void)
 {
     String data;
     unsigned long start;
-    //DBG("AT+CIFSR\r\n");
-    for(int a=0; a<3;a++)
-    {
     _cell.println("AT+CIFSR");
     start = millis();
-    while (millis()-start<ESP8266_TIMEOUT) {
-     while(_cell.available()>0)
-     {
-     char a =_cell.read();
-     data=data+a;
-     }
-     if (data.indexOf("AT+CIFSR")!=-1)
-     {
-         break;
-     }
+    while (millis()-start < ESP8266_TIMEOUT) {
+        while(_cell.available()) {
+            data += _cell.read();
+        }
+        if (data.indexOf("AT+CIFSR") != -1) {
+            break;
+        }
     }
-    if(data.indexOf(".") != -1)
-    {
-        break;
-    }
-    data = "";
-  }
-    //DBG(data);
-    //DBG("\r\n");
+    DBG(data);
     char head[4] = {0x0D,0x0A};
     char tail[7] = {0x0D,0x0D,0x0A};
     data.replace("AT+CIFSR","");
     data.replace(tail,"");
     data.replace(head,"");
-
+    DBG(data);
     return data;
 }
 
@@ -929,26 +896,24 @@ Set server parameters
 ***************************************************************************/
 boolean WIFI::confServer(byte mode, int port)
 {
-    _cell.print("AT+CIPSERVER=");
-    _cell.print(String(mode));
-    _cell.print(",");
-    _cell.println(String(port));
-
     String data;
-    unsigned long start;
-    start = millis();
-    boolean found = false;
-    while (millis()-start<ESP8266_TIMEOUT) {
-     if(_cell.available()>0)
-     {
-     char a =_cell.read();
-     data=data+a;
-     }
-     if (data.indexOf("OK")!=-1 || data.indexOf("no charge")!=-1)
-     {
-        found = true;
-         break;
-     }
-  }
-  return found;
+    boolean result = false;
+    String cmd = "AT+CIPSERVER=";
+    cmd += mode;
+    cmd += ",";
+    cmd += port;
+    _cell.println(cmd);
+    DBG(cmd);
+
+    unsigned long start = millis();
+    while (millis()-start < ESP8266_TIMEOUT) {
+        if(_cell.available()) {
+            data += _cell.read();
+        }
+        if (data.indexOf("OK") != -1 || data.indexOf("no charge") != -1) {
+            result = true;
+            break;
+        }
+    }
+    return result;
 }
