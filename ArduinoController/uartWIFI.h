@@ -81,9 +81,9 @@ public:
 
     //Initialize port
     boolean Initialize(byte mode, String ssid, String pwd, byte chl = 1, byte ecn = 2);
-    boolean ipConfig(byte type, String addr, int port, boolean a = 0, byte id = 0);
+    boolean ipConfig(byte type, String addr, int port, boolean useMultiConn = false, byte id = 0);
 
-    boolean Send(String str);  //send data in sigle connection mode
+    boolean Send(String str);  //send data in single connection mode
     boolean Send(byte id, String str);  //send data int multiple connection mode
 
     int ReceiveMessage(char *buf);
@@ -103,11 +103,11 @@ public:
 
     /*================TCP/IP commands================*/
     String showStatus(void);    //inquire the connection status
-    String showMux(void);       //show the current connection mode(sigle or multiple)
-    boolean confMux(boolean a);    //set the connection mode(sigle:0 or multiple:1)
-    boolean newMux(byte type, String addr, int port);   //create new tcp or udp connection (sigle connection mode)
+    String showMux(void);       //show the current connection mode(single or multiple)
+    boolean confMux(boolean useMultiConn);    //set connection mode
+    boolean newMux(byte type, String addr, int port);   //create new tcp or udp connection (single connection mode)
     boolean newMux(byte id, byte type, String addr, int port);   //create new tcp or udp connection (multiple connection mode)(id:0-4)
-    void closeMux(void);   //close tcp or udp (sigle connection mode)
+    void closeMux(void);   //close tcp or udp (single connection mode)
     void closeMux(byte id); //close tcp or udp (multiple connection mode)
     String showIP(void);    //show the current ip address
     boolean confServer(byte mode, int port);  //set the parameter of server
