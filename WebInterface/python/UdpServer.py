@@ -41,6 +41,7 @@ import argparse
 HOST = "0.0.0.0"
 PORT = 9999
 ENCODING = "ASCII"
+count = 0
 
 class RaspberryPiHandler(socketserver.BaseRequestHandler):
     """
@@ -77,7 +78,9 @@ class RaspberryPiHandler(socketserver.BaseRequestHandler):
         else:
             cmd = "relay_on();"
         socket = self.request[1]
-        cmd = "CMD;{}".format(cmd)
+        global count
+        count += 1
+        cmd = "CMD;{}".format(count)
         socket.sendto(cmd.encode(encoding=ENCODING), self.client_address)
         logging.info("Sent \"{}\"".format(cmd))
 
