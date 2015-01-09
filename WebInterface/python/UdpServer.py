@@ -37,6 +37,7 @@ import logging
 import db
 import socketserver
 import argparse
+from time import sleep
 
 HOST = "0.0.0.0"
 PORT = 9999
@@ -81,6 +82,7 @@ class RaspberryPiHandler(socketserver.BaseRequestHandler):
         global count
         count += 1
         cmd = "CMD;{}".format(count)
+        sleep(0.5)
         socket.sendto(cmd.encode(encoding=ENCODING), self.client_address)
         logging.info("Sent \"{}\"".format(cmd))
 

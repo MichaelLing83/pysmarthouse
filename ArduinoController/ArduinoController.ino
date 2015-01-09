@@ -136,13 +136,8 @@ void setup() {
 
     // initialize ESP8266
     wifi.begin();
-    if(!wifi.Initialize(STA, SSID, PASSWORD)) {
-        wifi.Initialize(STA, SSID, PASSWORD);
-    }
+    wifi.Initialize(STA, SSID, PASSWORD);
     delay(8000);  //make sure the module have enough time to get an IP address
-    //DebugSerial.println(wifi.showIP()); //show ip address of module
-
-    //delay(5000);
     wifi.ipConfig(UDP, SERVER_IP, SERVER_PORT); // configure server info
 }
 
@@ -192,7 +187,6 @@ void loop() {
             report += ";";
         #endif
         wifi.Send(report);
-        //delay(2000);    // do we need to be sure sending is finished?
 
         // receive response (cmd) from server
         int data_len = wifi.ReceiveMessage(wifiBuffer);

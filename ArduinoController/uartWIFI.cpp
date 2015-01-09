@@ -7,11 +7,21 @@ TODO: Find if head and tail pattern are universal, so we could handle them at on
 #include "uartWIFI.h"
 
 #ifdef ESP8266_DEBUG
-    #define DBG(message)    Serial.println(message)
+    #define DBGR(message)   Serial.print(message)
+    #define DBG(message)    Serial.println(message) // debug output with newline
     #define DBGW(message)   Serial.write(message)
 #else
+    #define DBGR(message)
     #define DBG(message)
     #define DBGW(message)
+#endif
+
+#ifdef ESP8266_DEBUG_2
+    #define DBG2R(message)  Serial.print(message)
+    #define DBG2(message)   Serial.println(message)
+#else
+    #define DBG2R(message)
+    #define DBG2(message)
 #endif
 
 #ifdef UNO
@@ -24,15 +34,15 @@ int chlID;  //client id(0-4)
 
 void WIFI::begin(void)
 {
-    DBG("WIFI::begin() starts");
-    _cell.begin(ESP8266_BAUDRATE);
     #ifdef ESP8266_DEBUG
         DebugSerial.begin(debugBaudRate);   //The default baud rate for debugging is 9600
     #endif
+    DBG2("WIFI::begin() starts");
+    _cell.begin(ESP8266_BAUDRATE);
     _cell.flush();
     _cell.setTimeout(ESP8266_TIMEOUT);
     Reset();    // TODO: at other places, Reset results are not checked, is it a problem that Reset fails?
-    DBG("WIFI::begin() ends");
+    DBG2("WIFI::begin() ends");
 }
 
 
@@ -60,7 +70,8 @@ Initialize port
 ***************************************************************************/
 boolean WIFI::Initialize(byte mode, String ssid, String pwd, byte chl, byte ecn)
 {
-    DBG("WIFI::Initialize starts");
+    DBG2R("WIFI::Initialize starts with ");
+    DBG2R("mode=");DBG2R(mode);DBG2R(" SSID=");DBG2R(ssid);DBG2R(" pwd=");DBG2R(pwd);DBG2R(" chl=");DBG2R(chl);DBG2R(" ecn=");DBG2(ecn);
     boolean result = false;
     if (mode == STA || mode == AP || mode == AP_STA) {
         result = confMode(mode);
@@ -81,7 +92,7 @@ boolean WIFI::Initialize(byte mode, String ssid, String pwd, byte chl, byte ecn)
         }
     }
     return result;
-    DBG("WIFI::Initialize ends");
+    DBG2R("WIFI::Initialize ends with ");DBG2(result);
 }
 
 /*************************************************************************
@@ -106,7 +117,9 @@ Set up TCP or UDP connection
 ***************************************************************************/
 boolean WIFI::ipConfig(byte type, String addr, int port, boolean useMultiConn, byte id)
 {
-    DBG("WIFI::ipConfig starts");
+    DBG2R("WIFI::ipConfig starts with ");
+    DBG2R("type=");DBG2R(type);DBG2R(" addr=");DBG2R(addr);DBG2R(" port=");DBG2R(port);DBG2R(" useMultiConn=");DBG2R(useMultiConn);
+    DBG2R(" id=");DBG2(id);
     boolean result = false;
     confMux(useMultiConn);
     delay(ESP8266_TIMEOUT); // TODO: is this necessary?
@@ -115,8 +128,7 @@ boolean WIFI::ipConfig(byte type, String addr, int port, boolean useMultiConn, b
     } else {
         result = newMux(id, type, addr, port);
     }
-    DBG("WIFI::ipConfig");
-    DBG(result);
+    DBG2R("WIFI::ipConfig ends with ");DBG2(result);
     return result;
 }
 
@@ -142,15 +154,15 @@ int WIFI::ReceiveMessage(char *buf)
     unsigned long start = millis();
 
     // read in all data, which ends with "\nOK".
-     while (millis()-start < ESP8266_TIMEOUT) {
-        if (_cell.available()) {
+    while (millis() - start < ESP8266_TIMEOUT * 2) {
+        while (_cell.available()) {
             data += (char) _cell.read();
         }
         if (data.indexOf("\nOK") != -1) {
             break;
         }
     }
-    DBG(data);
+    DBGR("data=");DBG(data);
 
     // post processing
     // it can be in form "+IPD,len:data" or "+IPD,id,len:data"
@@ -198,6 +210,7 @@ Reboot the wifi module
 ***************************************************************************/
 boolean WIFI::Reset(void)
 {
+    DBG("WIFI::Reset starts");
     boolean result = false;
     unsigned long start;
     _cell.println("AT+RST");
@@ -209,6 +222,7 @@ boolean WIFI::Reset(void)
             break;
         }
     }
+    DBG("WIFI::Reset ends with ");
     DBG(result);
     return result;
 }

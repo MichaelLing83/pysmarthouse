@@ -19,6 +19,7 @@ V1.0	released the first version of ESP8266 library
 #define UNO //uncomment this line when you use it with UNO board
 //#define MEGA  //uncomment this line when you use it with MEGA board
 #define ESP8266_DEBUG
+//#define ESP8266_DEBUG_2
 
 #ifdef ESP8266_DEBUG
     #include <SoftwareSerial.h>
