@@ -1,6 +1,7 @@
 /*
-TODO: Find a good way to wait for ESP8266_TIMEOUT. In current solution, if we are unlucky and there is a wrap-around of timer, the we could
+DONE: Find a good way to wait for ESP8266_TIMEOUT. In current solution, if we are unlucky and there is a wrap-around of timer, the we could
     wait forever.
+    Answer: this is not a problem, since when overflow happens, the subtraction result will be a really big number (thanks to unsigned)
 TODO: Find if head and tail pattern are universal, so we could handle them at one place.
 */
 
@@ -38,6 +39,7 @@ void WIFI::begin(void)
         DebugSerial.begin(debugBaudRate);   //The default baud rate for debugging is 9600
     #endif
     DBG2("WIFI::begin() starts");
+    _newline = "\r\n";
     _cell.begin(ESP8266_BAUDRATE);
     _cell.flush();
     _cell.setTimeout(ESP8266_TIMEOUT);
@@ -345,13 +347,12 @@ String WIFI::showAP(void)
     if(data.indexOf("ERROR") != -1) {
         return "ERROR";
     } else {
-        char head[4] = {0x0D,0x0A};
-        char tail[7] = {0x0D,0x0A,0x0D,0x0A};
         data.replace("AT+CWLAP","");
         data.replace("OK","");
         data.replace("+CWLAP","WIFI");
-        data.replace(tail,"");
-        data.replace(head,"");
+        while (data.indexOf(_newline) != -1) {
+            data.replace(_newline, "");
+        }
         DBG(data);
         return data;
     }
@@ -381,13 +382,12 @@ String WIFI::showJAP(void)
         }
     }
     DBG(data);
-    char head[4] = {0x0D,0x0A};
-    char tail[7] = {0x0D,0x0A,0x0D,0x0A};
     data.replace("AT+CWJAP?","");
     data.replace("+CWJAP","AP");
     data.replace("OK","");
-    data.replace(tail,"");
-    data.replace(head,"");
+    while (data.indexOf(_newline) != -1) {
+        data.replace(_newline, "");
+    }
     DBG(data);
     return data;
 }
@@ -467,13 +467,12 @@ String WIFI::showSAP()
         }
     }
     DBG(data);
-    char head[4] = {0x0D,0x0A};
-    char tail[7] = {0x0D,0x0A,0x0D,0x0A};
     data.replace("AT+CWSAP?","");
     data.replace("+CWSAP","mySAP");
     data.replace("OK","");
-    data.replace(tail,"");
-    data.replace(head,"");
+    while (data.indexOf(_newline) != -1) {
+        data.replace(_newline, "");
+    }
     DBG(data);
     return data;
 }
@@ -547,12 +546,11 @@ String WIFI::showStatus(void)
         }
     }
     DBG(data);
-    char head[4] = {0x0D,0x0A};
-    char tail[7] = {0x0D,0x0A,0x0D,0x0A};
     data.replace("AT+CIPSTATUS","");
     data.replace("OK","");
-    data.replace(tail,"");
-    data.replace(head,"");
+    while (data.indexOf(_newline) != -1) {
+        data.replace(_newline, "");
+    }
     DBG(data);
     return data;
 }
@@ -580,13 +578,12 @@ String WIFI::showMux(void)
         }
     }
     DBG(data);
-    char head[4] = {0x0D,0x0A};
-    char tail[7] = {0x0D,0x0A,0x0D,0x0A};
     data.replace("AT+CIPMUX?","");
     data.replace("+CIPMUX","showMux");
     data.replace("OK","");
-    data.replace(tail,"");
-    data.replace(head,"");
+    while (data.indexOf(_newline) != -1) {
+        data.replace(_newline, "");
+    }
     DBG(data);
     return data;
 }
@@ -900,11 +897,10 @@ String WIFI::showIP(void)
         }
     }
     DBG(data);
-    char head[4] = {0x0D,0x0A};
-    char tail[7] = {0x0D,0x0D,0x0A};
     data.replace("AT+CIFSR","");
-    data.replace(tail,"");
-    data.replace(head,"");
+    while (data.indexOf(_newline) != -1) {
+        data.replace(_newline, "");
+    }
     DBG(data);
     return data;
 }

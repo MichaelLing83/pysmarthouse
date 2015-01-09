@@ -76,6 +76,8 @@ V1.0	released the first version of ESP8266 library
 
 class WIFI
 {
+private:
+    String _newline;
 public:
 
     void begin(void);
@@ -112,8 +114,6 @@ public:
     void closeMux(byte id); //close tcp or udp (multiple connection mode)
     String showIP(void);    //show the current ip address
     boolean confServer(byte mode, int port);  //set the parameter of server
-
-    String m_rev;
 };
 
 #endif  // __UARTWIFI_H__
