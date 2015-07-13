@@ -20,7 +20,8 @@
         2 DS18B20
             GND ->  GND
             VDD ->  5V
-            DQ  ->  4.7 kOhm    ->  5V
+            DAT ->  4.7 kOhm    ->  5V
+            DAT ->  PIN_4
         3 light sensor
             VCC ->  5V
             GND ->  GND
@@ -46,10 +47,9 @@
                 UTXD    ->  PIN_10
 
     Overall description:
-        1. Use ESP8266 to connect to house's wifi and then to Raspberry Pi;
-        2. Use UDP datagram and character->command mapping to open a control "port":
-            simply execute whatever command is received
-        3. Report back readings from sensors through ESP8266
+        1. Use ESP8266 to connect to wifi;
+        2. Send periodically report using ASCII and UDP datagram to predefined IP address and port;
+        3. For each UDP report sent, one command datagram can be received and executed;
 
     Binary sketch size:         16278 Bytes (if all chips are used)
     Binary sketch size limit:
@@ -64,7 +64,7 @@
     Comment out the define if the chip is not used.
 */
 #define USE_RELAY
-//#define USE_TEMPERATURE_SENSOR
+#define USE_TEMPERATURE_SENSOR
 //#define USE_LIGHT_SENSOR
 //#define USE_INFRARED_SENSOR
 // ESP8266 is always used
