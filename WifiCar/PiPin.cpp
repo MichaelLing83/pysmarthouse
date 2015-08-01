@@ -1,4 +1,5 @@
-/*
+/*  To save digital pin usage on Arduino, this library assumes analog pins
+    are used instead.
 */
 #include "PiPin.h"
 
@@ -19,9 +20,9 @@ int PiPin::read() {
     byte first_read, second_read;
     boolean is_jitter = true;
     while (is_jitter) {
-        first_read = digitalRead(in0) | (digitalRead(in1) << 1) | (digitalRead(in2) << 2);
+        first_read = (analogRead(in0)>512?1:0) | ((analogRead(in1)>512?1:0) << 1) | ((analogRead(in2)>512?1:0) << 2);
         delay(1);
-        second_read = digitalRead(in0) | (digitalRead(in1) << 1) | (digitalRead(in2) << 2);
+        second_read = (analogRead(in0)>512?1:0) | ((analogRead(in1)>512?1:0) << 1) | ((analogRead(in2)>512?1:0) << 2);
         if (first_read == second_read) {
             is_jitter = false;
         }

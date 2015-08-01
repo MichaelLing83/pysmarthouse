@@ -58,6 +58,7 @@ void Motor::forward() {
     digitalWrite(in4, LOW);
     analogWrite(enA, speed);
     analogWrite(enB, speed);
+    status = MOTOR_STATUS_FORWARD;
     long_execution_timer = MOTOR_LONG_EXECUTION_TIMER;
 }
 
@@ -68,6 +69,7 @@ void Motor::backward() {
     digitalWrite(in4, HIGH);
     analogWrite(enA, speed);
     analogWrite(enB, speed);
+    status = MOTOR_STATUS_BACKWARD;
     long_execution_timer = MOTOR_LONG_EXECUTION_TIMER;
 }
 
@@ -78,6 +80,7 @@ void Motor::turnleft() {
     digitalWrite(in4, HIGH);
     analogWrite(enA, speed);
     analogWrite(enB, speed);
+    status = MOTOR_STATUS_LEFT;
     long_execution_timer = MOTOR_LONG_EXECUTION_TIMER;
     short_execution_timer = MOTOR_SHORT_EXECUTION_TIMER;
 }
@@ -89,6 +92,7 @@ void Motor::turnright() {
     digitalWrite(in4, LOW);
     analogWrite(enA, speed);
     analogWrite(enB, speed);
+    status = MOTOR_STATUS_RIGHT;
     long_execution_timer = MOTOR_LONG_EXECUTION_TIMER;
     short_execution_timer = MOTOR_SHORT_EXECUTION_TIMER;
 }
@@ -100,6 +104,7 @@ void Motor::stop() {
     digitalWrite(in4, LOW);
     analogWrite(enA, 0);
     analogWrite(enB, 0);
+    status = MOTOR_STATUS_STOP;
     long_execution_timer = MOTOR_LONG_EXECUTION_TIMER;
 }
 
