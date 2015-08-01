@@ -1,0 +1,69 @@
+/*  Connections:
+        20-char 4-line LCD display QC2004A:
+            PIN_1 to PIN_16  <->  I2C adapter PIN_1 to PIN_16
+        I2C adapter: hole it with all chips facing you, and 16 pins on the top, then these pins from left to right are PIN_16 to PIN_1
+            GND  <->  GND
+            VCC  <->  5V
+            SDA  <->  A4 (on Mini);  SDA  <->  1kOhm  <->  5V
+            SCL  <->  A5 (on Mini);  SCL  <->  1kOhm  <->  5V
+            its I2C addr: 0x27
+        Clock chip SZ-042:
+            GND  <->  GND
+            VCC  <->  5V
+            SDA  <->  A4 (on Mini);  SDA  <->  1kOhm  <->  5V
+            SCL  <->  A5 (on Mini);  SCL  <->  1kOhm  <->  5V
+            its I2C addr: 0x68
+        DS18B20 temperature sensor:
+            GND  <->  GND;
+            VCC  <->  5V;
+            DAT  <->  D4 (on Mini);  DAT  <->  1kOhm  <->  5V
+*/
+
+
+
+
+#include <Wire.h> 
+#include "LiquidCrystal_I2C.h"
+#include "DS3231.h"
+#include "TemperatureSensor.h"
+
+// Set the LCD address to 0x27 for a 16 chars and 2 line display
+LiquidCrystal_I2C lcd(0x27, 20, 4);
+
+DS3231 clock(0x68);
+boolean set_time = false;
+
+OneWire ds(4);  // temperature sensor
+
+void setup()
+{
+    // initialize the LCD
+    lcd.begin();
+    
+    clock.begin();
+    
+    //Serial.begin(19200);
+
+    // Turn on the blacklight and print a message.
+    lcd.backlight();
+    if (set_time) {
+        clock.setTime(0, 43, 19, 6, 31, 7, 15);
+    }
+}
+
+void loop()
+{
+    String curTime = clock.readTime();
+    //Serial.println(curTime);
+    lcd.setCursor(0, 0);  // column, row
+    lcd.print(curTime);
+    
+    float temperature = get_temperature(&ds);
+    lcd.setCursor(0, 1);
+    lcd.print("Temp: "); lcd.setCursor(6, 1);
+    lcd.print(temperature); lcd.setCursor(11, 1);
+    lcd.print(" Celsius");
+    //String temperature = String("Temp: ") + temperature + " Celsius";
+    //lcd.print(String("Temp: ") + temperature + " Celsius");
+    delay(1000);
+}
