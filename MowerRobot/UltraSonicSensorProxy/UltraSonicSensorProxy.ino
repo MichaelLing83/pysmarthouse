@@ -66,7 +66,7 @@ void set_threshold(int numBytes) {
     // the first byte identifies which sensor to apply the threshold
     // the second byte tells how much to set as threshold
     uint8_t sensorIndex = Wire.read();
-    uint8_t threshold = wire.read();
+    uint8_t threshold = Wire.read();
     if (sensorIndex < UltraSonicSensorNumber) {
         thresholds[sensorIndex] = threshold;
     }
