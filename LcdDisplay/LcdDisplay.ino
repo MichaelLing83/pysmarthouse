@@ -27,6 +27,8 @@
 #include "DS3231.h"
 #include "TemperatureSensor.h"
 
+//#define ENABLE_DEBUG
+
 // Set the LCD address to 0x27 for a 16 chars and 2 line display
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
@@ -42,7 +44,9 @@ void setup()
     
     clock.begin();
     
-    //Serial.begin(19200);
+    #ifdef ENABLE_DEBUG
+        Serial.begin(19200);
+    #endif
 
     // Turn on the blacklight and print a message.
     lcd.backlight();
@@ -54,11 +58,16 @@ void setup()
 void loop()
 {
     String curTime = clock.readTime();
-    //Serial.println(curTime);
+    #ifdef ENABLE_DEBUG
+        Serial.println(curTime);
+    #endif
     lcd.setCursor(0, 0);  // column, row
     lcd.print(curTime);
     
     float temperature = get_temperature(&ds);
+    #ifdef ENABLE_DEBUG
+        Serial.print("Temperature: "); Serial.println(temperature);
+    #endif
     lcd.setCursor(0, 1);
     lcd.print("Temp: "); lcd.setCursor(6, 1);
     lcd.print(temperature); lcd.setCursor(11, 1);
