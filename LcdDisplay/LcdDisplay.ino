@@ -1,7 +1,8 @@
 /*  Connections:
         20-char 4-line LCD display QC2004A:
             PIN_1 to PIN_16  <->  I2C adapter PIN_1 to PIN_16
-        I2C adapter: hole it with all chips facing you, and 16 pins on the top, then these pins from left to right are PIN_16 to PIN_1
+        I2C adapter: hole it with all chips facing you, and 16 pins on the top, then these pins
+        from left to right are PIN_16 to PIN_1
             GND  <->  GND
             VCC  <->  5V
             SDA  <->  A4 (on Mini);  SDA  <->  1kOhm  <->  5V
@@ -17,9 +18,11 @@
             GND  <->  GND;
             VCC  <->  5V;
             DAT  <->  D4 (on Mini);  DAT  <->  1kOhm  <->  5V
+        PIR sensor:
+            GND  <->  GND
+            VCC  <->  5V
+            OUT  <->  D2 (on Mini)
 */
-
-
 
 
 #include <Wire.h> 
@@ -37,6 +40,14 @@ boolean set_time = false;
 
 OneWire ds(4);  // temperature sensor
 
+const int PIR_PIN = 2;
+const byte ON_PERIOD = 20;   // 60 * 1024 milliseconds
+volatile byte onTime;
+
+void motion() {
+    onTime = ON_PERIOD;
+}
+
 void setup()
 {
     // initialize the LCD
@@ -53,13 +64,25 @@ void setup()
     if (set_time) {
         clock.setTime(0, 43, 19, 6, 31, 7, 15);
     }
+    
+    onTime = ON_PERIOD;
+    //pinMode(2, INPUT);
+    attachInterrupt(0, motion, CHANGE);
 }
 
 void loop()
 {
+    unsigned long start_time = millis();
+    byte consumedSec = 0;
+    if (onTime !=0 ) {
+        lcd.backlight();
+    } else {
+        lcd.noBacklight();
+    }
     String curTime = clock.readTime();
     #ifdef ENABLE_DEBUG
         Serial.println(curTime);
+        Serial.print("onTime="); Serial.println(onTime);
     #endif
     lcd.setCursor(0, 0);  // column, row
     lcd.print(curTime);
@@ -75,4 +98,11 @@ void loop()
     //String temperature = String("Temp: ") + temperature + " Celsius";
     //lcd.print(String("Temp: ") + temperature + " Celsius");
     delay(1000);
+    consumedSec = (millis() - start_time) >> 10;
+    if (consumedSec < onTime) {
+        onTime -= consumedSec;
+    } else {
+        onTime = 0;
+    }
 }
+
