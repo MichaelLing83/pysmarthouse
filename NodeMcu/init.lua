@@ -2,8 +2,9 @@
 
 ds18b20_pin = 3  -- GPIO0
 ow.setup(ds18b20_pin)    -- init one wire
-cur_temp = -999 -- current temperature from DS18B20
 
+-- Bit xor operation
+--- TODO: is this not built in??
 function bxor(a,b)
     local r = 0
     for i = 0, 31 do
@@ -16,7 +17,8 @@ function bxor(a,b)
     return r
 end
 
---- Get temperature from DS18B20
+-- Get temperature from DS18B20
+--- return: integer, unit is 1/10000 degree celcius; a value over 100 C should be treated as invalid
 function getTemp()
     local t = 101 * 10000    -- 101 degree Celcius, the invalid temperature
     addr = ow.reset_search(ds18b20_pin)
@@ -46,10 +48,8 @@ function getTemp()
                             t = (-1) * t
                         end
                         t = t * 625
-                        -- cur_temp = t
-                        -- print("Last temp: " .. cur_temp)
+                        -- print("Last temp: " .. t)
                     end
-                    -- tmr.wdclr()
                 end
             end
         end
@@ -62,5 +62,5 @@ tmr.alarm(1, 5000, 1, function()
     cur_temp = getTemp()
     t1 = cur_temp / 10000
     t2 = (cur_temp >= 0 and cur_temp % 10000) or (10000 - cur_temp % 10000)
-    print("Temp:"..t1 .. "."..string.format("%04d", t2).." C\n")
+    print("Temp:"..t1.."."..string.format("%04d", t2).." C\n")
 end)
