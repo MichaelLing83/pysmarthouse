@@ -18,6 +18,7 @@ end
 
 --- Get temperature from DS18B20
 function getTemp()
+    local t = 101 * 10000    -- 101 degree Celcius, the invalid temperature
     addr = ow.reset_search(ds18b20_pin)
     repeat
         tmr.wdclr() -- clear system watchdog counter to avoid hardware reset caused by watchdog
@@ -45,8 +46,8 @@ function getTemp()
                             t = (-1) * t
                         end
                         t = t * 625
-                        cur_temp = t
-                        --print("Last temp: " .. cur_temp)
+                        -- cur_temp = t
+                        -- print("Last temp: " .. cur_temp)
                     end
                     -- tmr.wdclr()
                 end
@@ -54,10 +55,11 @@ function getTemp()
         end
         addr = ow.search(ds18b20_pin)
     until(addr == nil)
+    return t
 end
 
 tmr.alarm(1, 5000, 1, function()
-    getTemp()
+    cur_temp = getTemp()
     t1 = cur_temp / 10000
     t2 = (cur_temp >= 0 and cur_temp % 10000) or (10000 - cur_temp % 10000)
     print("Temp:"..t1 .. "."..string.format("%04d", t2).." C\n")
