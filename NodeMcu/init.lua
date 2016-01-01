@@ -1,6 +1,7 @@
 --init.lua
 
 ds18b20_pin = 3  -- GPIO0
+pin = 4 -- GPIO1
 ow.setup(ds18b20_pin)    -- init one wire
 
 -- Bit xor operation
@@ -58,9 +59,38 @@ function getTemp()
     return t
 end
 
-tmr.alarm(1, 5000, 1, function()
-    cur_temp = getTemp()
-    t1 = cur_temp / 10000
-    t2 = (cur_temp >= 0 and cur_temp % 10000) or (10000 - cur_temp % 10000)
-    print("Temp:"..t1.."."..string.format("%04d", t2).." C\n")
+wifi.setmode(wifi.STATION)
+wifi.sta.config("michael", "waterpigs")
+wifi.sta.connect()
+
+tmr.alarm(1, 1000, 1, function()
+    if wifi.sta.getip()== nil then
+      print("IP unavaiable, Waiting...")
+    else
+        tmr.stop(1)
+        print("Config done, IP is "..wifi.sta.getip())
+        print("start UDP server on port 5683")
+        s=net.createServer(net.UDP)
+        s:on("receive",function(s,c)
+            --print(c)
+            if c == "high" then
+                print("turning GPIO2 high")
+                gpio.write(pin, gpio.HIGH)
+            else
+                print("turning GPIO2 low")
+                gpio.write(pin, gpio.LOW)
+            end
+        end)
+        s:listen(5683)
+        client = net.createConnection(net.UDP, 0)
+        client:connect(9999, "192.168.31.105")
+        tmr.alarm(2, 5000, 1, function()
+            cur_temp = getTemp()
+            t1 = cur_temp / 10000
+            t2 = (cur_temp >= 0 and cur_temp % 10000) or (10000 - cur_temp % 10000)
+            print("Temp:"..t1.."."..string.format("%04d", t2).." C\n")
+            client:send(cur_temp)
+        end)
+    end
 end)
+
