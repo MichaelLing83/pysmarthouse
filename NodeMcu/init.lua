@@ -96,8 +96,7 @@ tmr.alarm(1, 1000, 1, function()
             t1 = cur_temp / 10000
             t2 = (cur_temp >= 0 and cur_temp % 10000) or (10000 - cur_temp % 10000)
             print("Temp:"..t1.."."..string.format("%04d", t2).." C\n")
-            client:send(devide_id..";TEMP="..cur_temp)
+            client:send("REPORT;"..devide_id..";Temperature;"..cur_temp)
         end)
     end
 end)
-
