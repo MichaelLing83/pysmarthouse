@@ -1,8 +1,15 @@
 --init.lua
 
+devide_id = "05"
 ds18b20_pin = 3  -- GPIO0
 pin = 4 -- GPIO1
 ow.setup(ds18b20_pin)    -- init one wire
+wifi_ssid = "michael"
+wifi_passwd = "waterpigs"
+config_server_port = 5683
+data_server_ip = "192.168.31.185"
+data_server_port = 9999
+data_report_timer = 60000   -- 60 seconds
 
 -- Bit xor operation
 --- TODO: is this not built in??
@@ -60,7 +67,7 @@ function getTemp()
 end
 
 wifi.setmode(wifi.STATION)
-wifi.sta.config("michael", "waterpigs")
+wifi.sta.config(wifi_ssid, wifi_passwd)
 wifi.sta.connect()
 
 tmr.alarm(1, 1000, 1, function()
@@ -69,7 +76,7 @@ tmr.alarm(1, 1000, 1, function()
     else
         tmr.stop(1)
         print("Config done, IP is "..wifi.sta.getip())
-        print("start UDP server on port 5683")
+        print("start UDP server on port "..config_server_port)
         s=net.createServer(net.UDP)
         s:on("receive",function(s,c)
             --print(c)
@@ -81,15 +88,15 @@ tmr.alarm(1, 1000, 1, function()
                 gpio.write(pin, gpio.LOW)
             end
         end)
-        s:listen(5683)
+        s:listen(config_server_port)
         client = net.createConnection(net.UDP, 0)
-        client:connect(9999, "192.168.31.105")
-        tmr.alarm(2, 5000, 1, function()
+        client:connect(data_server_port, data_server_ip)
+        tmr.alarm(2, data_report_timer, 1, function()
             cur_temp = getTemp()
             t1 = cur_temp / 10000
             t2 = (cur_temp >= 0 and cur_temp % 10000) or (10000 - cur_temp % 10000)
             print("Temp:"..t1.."."..string.format("%04d", t2).." C\n")
-            client:send(cur_temp)
+            client:send(devide_id..";TEMP="..cur_temp)
         end)
     end
 end)
