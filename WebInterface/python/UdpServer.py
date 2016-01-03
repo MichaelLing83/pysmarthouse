@@ -69,7 +69,7 @@ class RaspberryPiHandler(socketserver.BaseRequestHandler):
             operation, id = datagram[0:2]
             type_value_list = datagram[2:]
             for i in range(0, len(type_value_list), 2):
-                db.DB().insert(id, type_value_list[i], float(type_value_list[i+1])/100)
+                db.DB().insert(id, type_value_list[i], float(type_value_list[i+1])/10000)
                 if type_value_list[0] == "Relay":
                     relay = float(type_value_list[1]) / 100
         # send a CMD datagram back

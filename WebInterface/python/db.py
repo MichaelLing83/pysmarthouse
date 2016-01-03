@@ -12,7 +12,7 @@ import os.path
 import logging
 
 PATH_TO_DB = "/home/pi/git/pysmarthouse/WebInterface/data/pysmarthouse.db"
-ALL_IDS = ("KitchenWindow", "FrontDoorStep", "SunRoom", "GuestTiolet", "MainToilet", "Bedroom_1", "Bedroom_2", "Bedroom_3")
+ALL_IDS = ("05", "KitchenWindow", "FrontDoorStep", "SunRoom", "GuestTiolet", "MainToilet", "Bedroom_1", "Bedroom_2", "Bedroom_3")
 ALL_TYPES = ("Temperature", "Relay")
 
 class PSMError(Exception):
@@ -65,8 +65,10 @@ class DB:
         self.conn = sqlite3.connect(PATH_TO_DB, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
         self.c = self.conn.cursor()
         logging.info("Initializing DB instance done.")
-    def insert(self, id, t, v, ts=datetime.datetime.now()):
+    def insert(self, id, t, v, ts=None):
         # check parameter
+        if ts == None:
+            ts = datetime.datetime.now()
         check(id, str, ALL_IDS)
         check(t, str, ALL_TYPES)
         check(v, float, None)
@@ -75,11 +77,13 @@ class DB:
         self.c.execute("insert into pysmarthouse(id,t,v,ts) values (?,?,?,?)", (id, t, v, ts))
         self.conn.commit()
         logging.info("Record with id={}, t={}, v={}, ts={} is inserted.".format(id, t, v, ts))
-    def get_records(self, half_delta=datetime.timedelta(hours=12), ts=datetime.datetime.now()):
+    def get_records(self, half_delta=datetime.timedelta(hours=12), ts=None):
         '''
         Return all records among |now()-ts| < half_delta
         Result is sorted by timestamp.
         '''
+        if ts == None:
+            ts = datetime.datetime.now()
         logging.debug("half_delta={}, ts={}".format(half_delta, ts))
         check(half_delta, datetime.timedelta, None)
         check(ts, datetime.datetime, None)
