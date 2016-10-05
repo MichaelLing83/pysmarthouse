@@ -33,6 +33,11 @@ class Logger {
     Logger(String _fileName=LOGGER_DEFAULT_FILE_NAME);
 
     /*
+     * Remove log file if it exist.
+     */
+    void clearFile();
+
+    /*
      * Write log entry in memory, ideal to call from ISR.
      */
     void writeToMem(long timeMs, byte type, float value);

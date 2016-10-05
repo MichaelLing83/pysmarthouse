@@ -17,6 +17,12 @@ Logger::Logger(String _fileName):
     }
 }
 
+void Logger::clearFile() {
+  if (FileSystem.exists(fileName.c_str())) {
+    FileSystem.remove(fileName.c_str());
+  }
+}
+
 void Logger::writeToMem(long timeMs, byte type, float value) {
   byte wi = writeIndex;
   writeIndex = (writeIndex + 1) & LOGGER_BUFFER_INDEX_MASK;
