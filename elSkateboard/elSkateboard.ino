@@ -36,6 +36,7 @@ volatile boolean flagReadCurrent = false;
 VoltageSensor volt(0);
 // current sensor on analog pin 1
 CurrentSensor amp(1);
+Logger logger;
 
 void setup() {
   Timer1.initialize(TIMER_PERIOD * 1000);
@@ -58,30 +59,15 @@ void setup() {
 }
 
 void loop() {
-  if (flagReadVoltage) {
-    #ifdef ENABLE_DEBUG
-      DDD.print(millis());
-      DDD.print("\tVoltage=");
-      DDD.println(volt.read());
-    #endif
-    flagReadVoltage = false;
-  }
-
-  if (flagReadCurrent) {
-    #ifdef ENABLE_DEBUG
-      DDD.print(millis());
-      DDD.print("\tCurrent=");
-      DDD.println(amp.read());
-    #endif
-    flagReadCurrent = false;
-  }
-
+  logger.writeToFile();
 }
 
 void timerIsr() {
   if (++timerCount == 0) {
-    flagReadVoltage = true;
-    flagReadCurrent = true;
+    // log VOLTAGE_OVERALL
+    logger.writeToMem(millis(), VOLTAGE_OVERALL, volt.read());
+    // log CURRENT_OVERALL
+    logger.writeToMem(millis(), CURRENT_OVERALL, amp.read());
   }
 }
 
