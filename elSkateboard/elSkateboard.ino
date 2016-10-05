@@ -1,10 +1,11 @@
 #include "TimerOne.h"
 #include "VoltageSensor.h"
 #include "CurrentSensor.h"
+#include "Logger.h"
 
 // Debug flags
 #define ENABLE_DEBUG  // enable this line if get debug print
-//#define DEBUG_CONSOLE // enable this line if Yun shield is used
+#define DEBUG_CONSOLE // enable this line if Yun shield is used
 #ifdef ENABLE_DEBUG
   #ifdef DEBUG_CONSOLE
     #include <Console.h>
@@ -41,10 +42,18 @@ void setup() {
   Timer1.attachInterrupt(timerIsr);
   #ifdef ENABLE_DEBUG
     #ifdef DEBUG_CONSOLE
+      Bridge.begin();
       DDD.begin();
     #else
       DDD.begin(9600);
     #endif
+  #endif
+
+  #ifdef BRIDGE_H_  // Bridge is used
+    Bridge.begin();
+  #endif
+  #ifdef __FILEIO_H__ // FileIO is used
+    FileSystem.begin();
   #endif
 }
 
