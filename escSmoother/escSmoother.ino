@@ -30,12 +30,12 @@ const unsigned long debug_print_interval = 500; // ms
 
 // motor speed/drive constants
 const long NEUTRAL = 1530;
-const long BIAS_WINDOW = THROTTLE_SMOOTH_OFFSET;
 const long FULL_FORWARD = 2000;
 const long FULL_REVERSE = 1000;
 
 const long THROTTLE_SMOOTH_FACTOR = 4;
 const long THROTTLE_SMOOTH_OFFSET = 30;
+const long BIAS_WINDOW = THROTTLE_SMOOTH_OFFSET;
 
 // channel 2 on pin D2
 const int ch2Pin = 2;
