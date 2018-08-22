@@ -77,7 +77,7 @@ void loop() {
     DDD.print("Ch1: ");
     DDD.print(wheelPulseWidth);
     DDD.print("; Ch2: ");
-    DDD.print(throttlePulseWidth);
+    DDD.println(throttlePulseWidth);
     last_debug_print_time = millis();
   }
 #endif
